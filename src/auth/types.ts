@@ -10,7 +10,6 @@ export type AuthPayload = {
 
 export type AuthResponsePayload = {
   userName: string;
-  webrtcNumber: string;
   userId: number;
   role: Roles;
 };

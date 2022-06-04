@@ -1,3 +1,5 @@
+import { WordToLearn } from 'src/wordsToLearn/types';
+
 export const enum Roles {
   admin = 'admin',
   user = 'user',
@@ -12,6 +14,7 @@ export class User {
   secret: Secret;
   secretAnswer: string;
   email: string;
+  words: WordToLearn[];
 }
 
 export type Secret = {

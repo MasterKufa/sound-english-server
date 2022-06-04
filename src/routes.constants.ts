@@ -4,13 +4,18 @@ export const ROUTES = {
   API: {
     AUTH: {
       BASE: BASE_API_ROUTE + '/auth',
-      LOGIN: 'login',
-      REGISTER: 'register',
+      LOGIN: '/login',
+      REGISTER: '/register',
       LOGOUT: '/logout',
       VERIFY: '/verify_token',
     },
     USERS: {
       BASE: BASE_API_ROUTE + '/users',
+    },
+    WORDS: {
+      BASE: BASE_API_ROUTE + '/words',
+      ADD_ONE: '/add_one',
+      ALL: '/all',
     },
   },
 };
