@@ -16,7 +16,7 @@ import { WordsModule } from './wordsToLearn/wordsToLearn.module';
         config.get<string>('NODE_ENV') === 'production'
           ? {
               urlDatabase: process.env.DATABASE_URL,
-              dialect: config.get<Dialect>(DB_VARIABLES.DATABASE_DIALECT),
+              dialect: 'postgres',
               autoLoadModels: true,
               synchronize: true,
               logging: true,
