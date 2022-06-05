@@ -7,15 +7,26 @@ import { DB_VARIABLES } from './constants';
 import { Dialect } from 'sequelize/types';
 import { WordsModule } from './wordsToLearn/wordsToLearn.module';
 
-console.log(process.env.DATABASE_URL, process.env.NODE_ENV);
-
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     SequelizeModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (config: ConfigService) =>
-        config.get<string>('NODE_ENV') === 'production'
+      useFactory: (config: ConfigService) => {
+        console.log(
+          process.env.DATABASE_URL,
+          process.env.NODE_ENV === 'production',
+          process.env.NODE_ENV,
+          {
+            urlDatabase: process.env.DATABASE_URL,
+            dialect: 'postgres',
+            autoLoadModels: true,
+            synchronize: true,
+            logging: true,
+          },
+        );
+
+        return process.env.NODE_ENV === 'production'
           ? {
               urlDatabase: process.env.DATABASE_URL,
               dialect: 'postgres',
@@ -33,7 +44,8 @@ console.log(process.env.DATABASE_URL, process.env.NODE_ENV);
               autoLoadModels: true,
               synchronize: true,
               logging: false,
-            },
+            };
+      },
     }),
     AuthModule,
     WordsModule,
