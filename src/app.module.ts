@@ -7,28 +7,23 @@ import { DB_VARIABLES } from './constants';
 import { Dialect } from 'sequelize/types';
 import { WordsModule } from './wordsToLearn/wordsToLearn.module';
 
+const dbURIRegexp = /postgres:\/\/(.*):(.*)@(.*):(.*)\/(.*)/;
+
+const parseProductionURI = (uri: string) => {
+  const [_, username, password, host, port, database] = uri.match(dbURIRegexp);
+
+  return { username, password, host, port: Number(port), database };
+};
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     SequelizeModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => {
-        console.log(
-          process.env.DATABASE_URL,
-          process.env.NODE_ENV === 'production',
-          process.env.NODE_ENV,
-          {
-            urlDatabase: process.env.DATABASE_URL,
-            dialect: 'postgres',
-            autoLoadModels: true,
-            synchronize: true,
-            logging: true,
-          },
-        );
-
-        return process.env.NODE_ENV === 'production'
+      useFactory: (config: ConfigService) =>
+        process.env.NODE_ENV === 'production'
           ? {
-              urlDatabase: process.env.DATABASE_URL,
+              ...parseProductionURI(process.env.DATABASE_URL),
               dialect: 'postgres',
               autoLoadModels: true,
               synchronize: true,
@@ -44,8 +39,7 @@ import { WordsModule } from './wordsToLearn/wordsToLearn.module';
               autoLoadModels: true,
               synchronize: true,
               logging: false,
-            };
-      },
+            },
     }),
     AuthModule,
     WordsModule,
