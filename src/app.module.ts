@@ -7,6 +7,8 @@ import { DB_VARIABLES } from './constants';
 import { Dialect } from 'sequelize/types';
 import { WordsModule } from './wordsToLearn/wordsToLearn.module';
 
+console.log(process.env.DATABASE_URL, process.env.NODE_ENV);
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
