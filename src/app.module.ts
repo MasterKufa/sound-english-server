@@ -14,7 +14,13 @@ import { WordsModule } from './wordsToLearn/wordsToLearn.module';
       inject: [ConfigService],
       useFactory: (config: ConfigService) =>
         config.get<string>('NODE_ENV') === 'production'
-          ? { urlDatabase: process.env.DATABASE_URL }
+          ? {
+              urlDatabase: process.env.DATABASE_URL,
+              dialect: config.get<Dialect>(DB_VARIABLES.DATABASE_DIALECT),
+              autoLoadModels: true,
+              synchronize: true,
+              logging: true,
+            }
           : {
               dialect: config.get<Dialect>(DB_VARIABLES.DATABASE_DIALECT),
               host: config.get<string>(DB_VARIABLES.DATABASE_HOST),
