@@ -15,6 +15,8 @@ async function bootstrap() {
 
   app.useStaticAssets(join(__dirname, '..', '..', 'client', 'build'));
 
-  await app.listen(3000);
+  await app.listen(
+    process.env.NODE_ENV === 'production' ? process.env.PORT : 3000,
+  );
 }
 bootstrap();
