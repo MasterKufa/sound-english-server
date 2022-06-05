@@ -28,6 +28,7 @@ const parseProductionURI = (uri: string) => {
               autoLoadModels: true,
               synchronize: true,
               logging: true,
+              ssl: true,
             }
           : {
               dialect: config.get<Dialect>(DB_VARIABLES.DATABASE_DIALECT),
