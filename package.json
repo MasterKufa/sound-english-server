@@ -8,7 +8,7 @@
   "main": "/dist/client/src/index.js",
   "scripts": {
     "prebuild": "rimraf dist",
-    "build": "(cd client && npm install --force && npm i --save-dev @types/ramda && npm run build) && nest build",
+    "build": "(cd client && npm install --force  && npm run build) && nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
