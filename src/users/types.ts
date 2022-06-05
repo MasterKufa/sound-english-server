@@ -11,16 +11,9 @@ export class User {
   username: string;
   passwordHash: string;
   role: Roles;
-  secret: Secret;
-  secretAnswer: string;
   email: string;
   words: WordToLearn[];
 }
-
-export type Secret = {
-  name: string;
-  users?: User[];
-};
 
 export type FindUsersPayload = {
   username: string;

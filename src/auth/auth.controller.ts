@@ -11,9 +11,9 @@ export class AuthController {
   @Public()
   @Post(ROUTES.API.AUTH.LOGIN)
   async login(@Body() body: AuthPayload): Promise<EmittedToken> {
-    const { username, password } = body;
+    const { email, password } = body;
 
-    return this.authService.auth(username, password);
+    return this.authService.auth(email, password);
   }
 
   @Public()

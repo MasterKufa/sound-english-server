@@ -7,16 +7,12 @@ import { Sequelize } from 'sequelize-typescript';
 import { ConfigService } from '@nestjs/config';
 import { BCRYPT_SAULT } from './constants';
 import { AuthPayload } from 'src/auth/types';
-import { Op } from 'sequelize';
-import { Secret as SecretModel } from './secrets.model';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel(UserModel)
     private userModel: typeof UserModel,
-    @InjectModel(SecretModel)
-    private secretModel: typeof SecretModel,
     private sequelize: Sequelize,
     private config: ConfigService,
   ) {}
@@ -25,22 +21,12 @@ export class UsersService {
     return this.userModel.findByPk(id);
   }
 
-  async findByNameAndEmail(
-    username: string,
-    email?: string,
-  ): Promise<User | null> {
-    const filterhObj = email
-      ? { [Op.or]: [{ username }, { email }] }
-      : { username };
-
-    return this.userModel.findOne({ where: filterhObj });
+  async findByEmail(email?: string): Promise<User | null> {
+    return this.userModel.findOne({ where: { email } });
   }
 
   async createOne(authPayload: AuthPayload): Promise<User | null> {
-    const isExist = await this.findByNameAndEmail(
-      authPayload.username,
-      authPayload.email,
-    );
+    const isExist = await this.findByEmail(authPayload.email);
 
     if (isExist) {
       throw new HttpException(
@@ -66,12 +52,6 @@ export class UsersService {
         },
         { transaction: t },
       );
-
-      const secret = await this.secretModel.findOne({
-        where: { name: authPayload.secret },
-      });
-
-      user.setSecret(secret);
     });
 
     return user;

@@ -8,7 +8,6 @@ import {
   Table,
 } from 'sequelize-typescript';
 import { Roles } from './types';
-import { Secret } from './secrets.model';
 import { WordToLearn } from 'src/wordsToLearn/types';
 import { Word } from 'src/wordsToLearn/wordsToLearn.model';
 
@@ -32,13 +31,6 @@ export class User extends Model {
   @IsEmail
   @Column
   email: string;
-
-  @ForeignKey(() => Secret)
-  @Column
-  secretId: number;
-
-  @BelongsTo(() => Secret)
-  secret: Secret;
 
   @HasMany(() => Word, 'userId')
   words: WordToLearn[];

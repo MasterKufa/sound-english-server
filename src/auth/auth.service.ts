@@ -44,8 +44,8 @@ export class AuthService {
     return this.deletePassword(user);
   }
 
-  async auth(username: string, password: string): Promise<EmittedToken> {
-    const user = await this.usersService.findByNameAndEmail(username);
+  async auth(email: string, password: string): Promise<EmittedToken> {
+    const user = await this.usersService.findByEmail(email);
     const isValidPassword =
       user && bcrypt.compareSync(password, user.passwordHash);
 

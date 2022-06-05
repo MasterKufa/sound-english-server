@@ -1,10 +1,7 @@
 import { Roles, User } from 'src/users/types';
 
 export type AuthPayload = {
-  username: string;
   password: string;
-  secret: string;
-  secretAnswer: string;
   email: string;
 };
 

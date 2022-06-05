@@ -15,6 +15,7 @@ export const ROUTES = {
     WORDS: {
       BASE: BASE_API_ROUTE + '/words',
       ADD_ONE: '/add_one',
+      DELETE_ONE: '/delete_one',
       ALL: '/all',
     },
   },

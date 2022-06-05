@@ -13,11 +13,19 @@ export class WordsService {
     private sequelize: Sequelize,
   ) {}
 
-  async findByFilters(): Promise<WordToLearn[] | null> {
-    return this.wordModel.findAll();
+  async findByFilters(
+    payload: WithUser<object>,
+  ): Promise<WordToLearn[] | null> {
+    return await this.wordModel.findAll({ where: { userId: payload.user.id } });
   }
 
   async addOne(payload: WithUser<WordPayload>): Promise<void> {
-    this.wordModel.create(payload);
+    await this.wordModel.create({ ...payload, userId: payload.user.id });
+  }
+
+  async deleteOne(payload: WithUser<{ id: number }>): Promise<void> {
+    await this.wordModel.destroy({
+      where: { userId: payload.user.id, id: payload.id },
+    });
   }
 }

@@ -17,7 +17,15 @@ export class WordsController {
   }
 
   @Get(ROUTES.API.WORDS.ALL)
-  findByFilters(): Promise<WordToLearn[]> {
-    return this.wordsService.findByFilters();
+  findByFilters(@Req() request: ReqWithUser<object>): Promise<WordToLearn[]> {
+    return this.wordsService.findByFilters({ user: request.user });
+  }
+
+  @Post(ROUTES.API.WORDS.DELETE_ONE)
+  deleteWord(@Req() request: ReqWithUser<{ id: number }>): Promise<void> {
+    return this.wordsService.deleteOne({
+      ...request.body,
+      user: request.user,
+    });
   }
 }

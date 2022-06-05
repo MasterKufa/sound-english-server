@@ -5,6 +5,7 @@ import { AuthModule } from './auth/auth.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { DB_VARIABLES } from './constants';
 import { Dialect } from 'sequelize/types';
+import { WordsModule } from './wordsToLearn/wordsToLearn.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { Dialect } from 'sequelize/types';
       }),
     }),
     AuthModule,
+    WordsModule,
   ],
   controllers: [AppController],
 })
