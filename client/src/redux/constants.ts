@@ -1,4 +1,5 @@
-export const HOST = 'http://localhost:3000/api';
+export const HOST =
+  process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:3000/api';
 export const BASE_API = HOST;
 
 export const ROUTES = {
