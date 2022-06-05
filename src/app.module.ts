@@ -13,12 +13,8 @@ import { WordsModule } from './wordsToLearn/wordsToLearn.module';
     SequelizeModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) =>
-        config.get<string>(DB_VARIABLES.DATABASE_URL)
-          ? {
-              host: config.get<string>(DB_VARIABLES.DATABASE_URL),
-              autoLoadModels: true,
-              synchronize: true,
-            }
+        config.get<string>('NODE_ENV') === 'production'
+          ? { urlDatabase: process.env.DATABASE_URL }
           : {
               dialect: config.get<Dialect>(DB_VARIABLES.DATABASE_DIALECT),
               host: config.get<string>(DB_VARIABLES.DATABASE_HOST),
