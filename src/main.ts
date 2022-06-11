@@ -12,8 +12,9 @@ async function bootstrap() {
 
   app.useGlobalGuards(new JwtAuthGuard(reflector));
   app.enableShutdownHooks();
-
   app.useStaticAssets(join(__dirname, '..', '..', 'client', 'build'));
+  app.setBaseViewsDir(join(__dirname, '..', '..', 'client', 'build'));
+  app.setViewEngine('hbs');
 
   await app.listen(
     process.env.NODE_ENV === 'production' ? process.env.PORT : 3000,

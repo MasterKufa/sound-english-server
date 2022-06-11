@@ -1,4 +1,4 @@
-const BASE_API_ROUTE = 'api';
+export const BASE_API_ROUTE = '/api';
 
 export const ROUTES = {
   API: {
@@ -15,6 +15,7 @@ export const ROUTES = {
     WORDS: {
       BASE: BASE_API_ROUTE + '/words',
       ADD_ONE: '/add_one',
+      ADD_MANY: '/add_many',
       DELETE_ONE: '/delete_one',
       ALL: '/all',
     },

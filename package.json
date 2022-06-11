@@ -8,7 +8,7 @@
   "main": "/dist/client/src/index.js",
   "scripts": {
     "prebuild": "rimraf dist",
-    "build": "(cd client && npm install --force  && npm run build) && nest build",
+    "build": "(cd client && npm install --force  && npm run build) && nest build && (cd client/build && cp index.html index.hbs)",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "node ./dist/src/main.js",
     "start:local": "nest start",
@@ -36,6 +36,7 @@
     "@nestjs/websockets": "^8.4.0",
     "@sequelize/core": "^7.0.0-alpha.10",
     "bcryptjs": "^2.4.3",
+    "hbs": "^4.2.0",
     "lodash": "^4.17.21",
     "nanoid": "^3.3.2",
     "passport": "^0.5.2",

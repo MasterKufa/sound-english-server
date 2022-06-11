@@ -1,6 +1,6 @@
 import jwt_decode from 'jwt-decode';
 import { changeIsBlockingLoader } from '../reducers/main';
-import { AppPage, AuthPage, DecodedToken } from '../reducers/types';
+import { AppPage, AuthPage, DecodedToken, WorkPage } from '../reducers/types';
 import { store } from '../store';
 import { browserHistory, pathify } from 'ducks/hooks';
 
@@ -20,7 +20,7 @@ window.addEventListener('DOMContentLoaded', () => {
         browserHistory.location.pathname.includes(AppPage.Authentication) ||
         browserHistory.location.pathname === '/'
       )
-        browserHistory.push(pathify([AppPage.Workplace]));
+        browserHistory.push(pathify([AppPage.Workplace, WorkPage.Words]));
     }
   } else {
     redirectAuth();

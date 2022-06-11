@@ -86,13 +86,13 @@ export const Authentication: React.FC = () => {
 
       navigate(pathify([AppPage.Workplace, WorkPage.Words]));
     }
-  }, [isAuthSuccess, authResponse]);
+  }, [isAuthSuccess, authResponse, navigate]);
 
   useLayoutEffect(() => {
     if (isRegSuccess) {
       navigate(pathify([AuthPage.auth], { relative: true }));
     }
-  }, [isRegSuccess]);
+  }, [isRegSuccess, navigate]);
 
   return (
     <Stack direction="column" sx={{ height: '100vh' }}>
@@ -117,7 +117,10 @@ export const Authentication: React.FC = () => {
         </Toolbar>
       </AppBar>
       <CenteredContainer sx={{ flexGrow: 1 }}>
-        <Paper sx={{ width: 657, p: theme.spacing(4) }} elevation={3}>
+        <Paper
+          sx={{ maxWidth: 657, width: '100%', p: theme.spacing(4) }}
+          elevation={3}
+        >
           <Stack direction="column">
             <TextField
               size="small"

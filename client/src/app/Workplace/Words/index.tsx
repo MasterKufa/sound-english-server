@@ -6,42 +6,18 @@ import {
   MenuItem,
   Select,
   SelectChangeEvent,
-  Stack,
   TextField,
 } from '@mui/material';
 import {
   useAddWordMutation,
-  useDeleteWordMutation,
   useGetAllQuery,
 } from 'ducks/reducers/api/words.api';
-import { theme } from 'globalStyle/theme';
 import React, { useCallback, useEffect, useState } from 'react';
-import { TableFix } from '../common/Table';
-import { Fixed } from '../common/Table/types';
 import { buildUterc, speakUterc } from './helpers';
-import { Columns, Lang } from './types';
-import DeleteIcon from '@mui/icons-material/Delete';
-
-const columns = [
-  {
-    Header: 'ID',
-    accessor: Columns.id,
-    fixed: Fixed.left,
-    width: 70,
-  },
-  {
-    Header: 'En',
-    accessor: Columns.english,
-    fixed: Fixed.center,
-    width: 500,
-  },
-  {
-    Header: 'Ru',
-    accessor: Columns.russian,
-    fixed: Fixed.center,
-    width: 500,
-  },
-];
+import { StyledStack } from './parts';
+import { Lang } from './types';
+import { WordsTable } from './wordsTable';
+import { CSVManager } from './CSVManager';
 
 export const Words: React.FC = () => {
   const [english, setEnglish] = useState('');
@@ -52,7 +28,6 @@ export const Words: React.FC = () => {
   const [voiceList, setVoiceList] = useState<SpeechSynthesisVoice[]>([]);
 
   const [addWord] = useAddWordMutation();
-  const [deleteWord] = useDeleteWordMutation();
 
   const { data } = useGetAllQuery();
 
@@ -93,23 +68,11 @@ export const Words: React.FC = () => {
   }, []);
 
   return (
-    <Box>
-      <Stack
-        direction="row"
-        spacing={3}
-        sx={{
-          flexWrap: 'wrap',
-          justifyContent: 'center',
-          mb: theme.spacing(3),
-        }}
+    <>
+      <Box
+        sx={{ display: 'flex', alignItems: 'center', flexDirection: 'column' }}
       >
-        <Stack
-          spacing={1}
-          direction="row"
-          sx={{
-            mb: theme.spacing(3),
-          }}
-        >
+        <StyledStack>
           <TextField
             label="En"
             value={english}
@@ -131,25 +94,13 @@ export const Words: React.FC = () => {
           >
             Add
           </Button>
-        </Stack>
-        {!!data?.length && (
-          <Button
-            sx={{ height: '60px' }}
-            variant="contained"
-            onClick={() => {
-              isPlaying ? stopPlay() : speak();
-
-              setIsPlaying(!isPlaying);
-            }}
-          >
-            {isPlaying ? 'Stop' : 'Play'}
-          </Button>
-        )}
-        <Stack spacing={1} direction="row">
+        </StyledStack>
+        <CSVManager />
+        <StyledStack>
           <FormControl>
             <InputLabel id="en-voice">En Voice</InputLabel>
             <Select
-              sx={{ width: '150px' }}
+              sx={{ maxWidth: '150px' }}
               labelId="en-voice"
               value={enVoice?.name || ''}
               label="En Voice"
@@ -167,7 +118,7 @@ export const Words: React.FC = () => {
           <FormControl>
             <InputLabel id="ru-voice">Ru Voice</InputLabel>
             <Select
-              sx={{ width: '150px' }}
+              sx={{ maxWidth: '150px' }}
               labelId="ru-voice"
               value={ruVoice?.name || ''}
               label="Ru Voice"
@@ -182,23 +133,22 @@ export const Words: React.FC = () => {
                 ))}
             </Select>
           </FormControl>
-        </Stack>
-      </Stack>
+          {!!data?.length && (
+            <Button
+              sx={{ height: '60px' }}
+              variant="contained"
+              onClick={() => {
+                isPlaying ? stopPlay() : speak();
 
-      {data && (
-        <TableFix
-          compact
-          rowActions={[
-            {
-              name: 'Удалить',
-              icon: <DeleteIcon />,
-              onClick: (row) => deleteWord({ id: row.values[Columns.id] }),
-            },
-          ]}
-          data={data}
-          columns={columns}
-        />
-      )}
-    </Box>
+                setIsPlaying(!isPlaying);
+              }}
+            >
+              {isPlaying ? 'Stop' : 'Play'}
+            </Button>
+          )}
+        </StyledStack>
+      </Box>
+      <WordsTable />
+    </>
   );
 };

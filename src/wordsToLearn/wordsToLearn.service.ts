@@ -23,6 +23,12 @@ export class WordsService {
     await this.wordModel.create({ ...payload, userId: payload.user.id });
   }
 
+  async addMany(payload: WithUser<{ words: WordPayload[] }>): Promise<void> {
+    await this.wordModel.bulkCreate(
+      payload.words.map((x) => ({ ...x, userId: payload.user.id })),
+    );
+  }
+
   async deleteOne(payload: WithUser<{ id: number }>): Promise<void> {
     await this.wordModel.destroy({
       where: { userId: payload.user.id, id: payload.id },

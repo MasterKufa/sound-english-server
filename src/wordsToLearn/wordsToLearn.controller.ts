@@ -16,6 +16,14 @@ export class WordsController {
     });
   }
 
+  @Post(ROUTES.API.WORDS.ADD_MANY)
+  addWords(@Req() request: ReqWithUser<WordPayload[]>): Promise<void> {
+    return this.wordsService.addMany({
+      words: request.body,
+      user: request.user,
+    });
+  }
+
   @Get(ROUTES.API.WORDS.ALL)
   findByFilters(@Req() request: ReqWithUser<object>): Promise<WordToLearn[]> {
     return this.wordsService.findByFilters({ user: request.user });

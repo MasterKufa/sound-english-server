@@ -1,9 +1,12 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Render } from '@nestjs/common';
+import { Public } from './auth/jwt-auth.guard';
 
 @Controller()
 export class AppController {
-  @Get()
-  getHello(): string {
-    return '';
+  @Public()
+  @Get('/workplace/**')
+  @Render('index.hbs')
+  getHello() {
+    return;
   }
 }
