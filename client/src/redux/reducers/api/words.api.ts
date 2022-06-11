@@ -39,6 +39,13 @@ export const wordsApiSlice = createApi({
       }),
       invalidatesTags: [Tags.all],
     }),
+    deleteAll: builder.mutation<void, void>({
+      query: (body) => ({
+        url: ROUTES.WORDS.DELETE_ALL,
+        method: 'POST',
+      }),
+      invalidatesTags: [Tags.all],
+    }),
     getAll: builder.query<Word[], void>({
       query: () => ({
         url: ROUTES.WORDS.ALL,
@@ -53,5 +60,6 @@ export const {
   useGetAllQuery,
   useDeleteWordMutation,
   useAddManyWordsMutation,
+  useDeleteAllMutation,
 } = wordsApiSlice;
 export default wordsApiSlice.reducer;

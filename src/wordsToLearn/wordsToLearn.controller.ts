@@ -36,4 +36,11 @@ export class WordsController {
       user: request.user,
     });
   }
+
+  @Post(ROUTES.API.WORDS.DELETE_ALL)
+  deleteAllWords(@Req() request: ReqWithUser<object>): Promise<void> {
+    return this.wordsService.deleteAll({
+      user: request.user,
+    });
+  }
 }

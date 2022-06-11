@@ -34,4 +34,10 @@ export class WordsService {
       where: { userId: payload.user.id, id: payload.id },
     });
   }
+
+  async deleteAll(payload: WithUser<object>): Promise<void> {
+    await this.wordModel.destroy({
+      where: { userId: payload.user.id },
+    });
+  }
 }

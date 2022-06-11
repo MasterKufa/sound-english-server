@@ -17,6 +17,7 @@ export const ROUTES = {
       ADD_ONE: '/add_one',
       ADD_MANY: '/add_many',
       DELETE_ONE: '/delete_one',
+      DELETE_ALL: '/delete_all',
       ALL: '/all',
     },
   },

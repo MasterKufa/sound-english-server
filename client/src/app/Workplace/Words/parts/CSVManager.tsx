@@ -3,7 +3,7 @@ import { useAddManyWordsMutation } from 'ducks/reducers/api/words.api';
 import { Word } from 'ducks/reducers/types';
 import { first } from 'lodash';
 import React, { useCallback, useState } from 'react';
-import { StyledStack } from './parts';
+import { StyledStack } from '../styled';
 import { parse } from 'papaparse';
 
 const CSVTemplate = window.URL.createObjectURL(

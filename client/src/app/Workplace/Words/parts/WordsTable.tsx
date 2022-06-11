@@ -3,9 +3,9 @@ import {
   useGetAllQuery,
 } from 'ducks/reducers/api/words.api';
 import React from 'react';
-import { TableFix } from '../common/Table';
-import { Fixed } from '../common/Table/types';
-import { Columns } from './types';
+import { TableFix } from '../../common/Table';
+import { Fixed } from '../../common/Table/types';
+import { Columns } from '../types';
 import DeleteIcon from '@mui/icons-material/Delete';
 
 const columns = [
