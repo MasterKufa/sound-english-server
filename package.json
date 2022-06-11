@@ -8,7 +8,7 @@
   "main": "/dist/client/src/index.js",
   "scripts": {
     "prebuild": "rimraf dist",
-    "build": "(cd client && npm install --force  && npm run build) && nest build && (cd client/build && cp index.html index.hbs)",
+    "build": "(cd client && npm install --force --dev  && npm run build) && nest build && (cd client/build && cp index.html index.hbs)",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "node ./dist/src/main.js",
     "start:local": "nest start",
