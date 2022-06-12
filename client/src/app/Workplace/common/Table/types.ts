@@ -1,13 +1,13 @@
-import React from "react";
-import { Column, Row } from "react-table";
+import React from 'react';
+import { Column, Row } from 'react-table';
 
 export enum Fixed {
-  left = "left",
-  right = "right",
-  center = "center",
+  left = 'left',
+  right = 'right',
+  center = 'center',
 }
 
-export type CustomColumn = Column & Partial<{ fixed: Fixed }>;
+export type CustomColumn = Column & Partial<{ fixed: Fixed; hidden: boolean }>;
 
 export type RowAction = {
   icon: React.ReactElement;

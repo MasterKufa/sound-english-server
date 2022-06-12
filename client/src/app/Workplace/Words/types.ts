@@ -2,6 +2,8 @@ export enum Columns {
   english = 'english',
   russian = 'russian',
   id = 'id',
+  delete = 'delete',
+  select = 'select',
 }
 
 export enum Lang {

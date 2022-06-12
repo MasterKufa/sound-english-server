@@ -59,6 +59,8 @@ const TableFixBody: React.FC<TableFixBodyProps> = ({
             {row.cells.map((cell, inx) => {
               const { key: cellKey, ...cellProps } = cell.getCellProps();
 
+              if ((cell.column as CustomColumn).hidden) return null;
+
               return (
                 <StyledTableCell
                   {...cellProps}

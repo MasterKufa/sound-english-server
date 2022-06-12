@@ -6,6 +6,7 @@ import {
   Select,
   SelectChangeEvent,
 } from '@mui/material';
+import { useSESelector } from 'ducks/hooks';
 import { useGetAllQuery } from 'ducks/reducers/api/words.api';
 import React, { useCallback, useEffect, useState } from 'react';
 import { buildUterc, speakUterc } from '../helpers';
@@ -17,6 +18,7 @@ export const PlayManager: React.FC = () => {
   const [ruVoice, setRuVoice] = useState<SpeechSynthesisVoice | null>(null);
   const [enVoice, setEnVoice] = useState<SpeechSynthesisVoice | null>(null);
   const [voiceList, setVoiceList] = useState<SpeechSynthesisVoice[]>([]);
+  const { currentWord } = useSESelector((state) => state.words);
 
   const { data } = useGetAllQuery();
 

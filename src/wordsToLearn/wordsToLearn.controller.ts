@@ -43,4 +43,14 @@ export class WordsController {
       user: request.user,
     });
   }
+
+  @Post(ROUTES.API.WORDS.DELETE_BY_IDS)
+  deleteWordsById(
+    @Req() request: ReqWithUser<{ ids: number[] }>,
+  ): Promise<void> {
+    return this.wordsService.deleteByIds({
+      ...request.body,
+      user: request.user,
+    });
+  }
 }

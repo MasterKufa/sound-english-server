@@ -4,6 +4,7 @@ import { Word as WordModel } from './wordsToLearn.model';
 import { Sequelize } from 'sequelize-typescript';
 import { WordPayload, WordToLearn } from './types';
 import { WithUser } from 'src/auth/types';
+import { Op } from 'sequelize';
 
 @Injectable()
 export class WordsService {
@@ -38,6 +39,12 @@ export class WordsService {
   async deleteAll(payload: WithUser<object>): Promise<void> {
     await this.wordModel.destroy({
       where: { userId: payload.user.id },
+    });
+  }
+
+  async deleteByIds(payload: WithUser<{ ids: number[] }>): Promise<void> {
+    await this.wordModel.destroy({
+      where: { userId: payload.user.id, id: { [Op.in]: payload.ids } },
     });
   }
 }

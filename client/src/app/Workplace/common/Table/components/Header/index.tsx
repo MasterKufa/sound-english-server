@@ -1,14 +1,14 @@
-import React from "react";
-import { HeaderGroup } from "react-table";
-import { TABLE_PARTS } from "../../const";
-import { CustomColumn } from "../../types";
+import React from 'react';
+import { HeaderGroup } from 'react-table';
+import { TABLE_PARTS } from '../../const';
+import { CustomColumn } from '../../types';
 import {
   HeadCellContent,
   SortedArrowUp,
   StyledHeadCell,
   StyledResizer,
   StyledTableHead,
-} from "./styled";
+} from './styled';
 
 type TableFixHeaderProps = {
   headerGroups: HeaderGroup<object>[];
@@ -33,6 +33,8 @@ const TableFixHeader: React.FC<TableFixHeaderProps> = ({
           {headerGroup.headers.map((column) => {
             const { key: headerKey, ...headerProps } = column.getHeaderProps();
 
+            if ((column as CustomColumn).hidden) return null;
+
             return (
               <StyledHeadCell
                 {...column.getSortByToggleProps()}
@@ -42,7 +44,7 @@ const TableFixHeader: React.FC<TableFixHeaderProps> = ({
                 offHeaderPaddings={offHeaderPaddings}
                 compact={compact}
               >
-                {typeof column.Header === "string" ? (
+                {typeof column.Header === 'string' ? (
                   <HeadCellContent>
                     {column.render(TABLE_PARTS.Header)}
                   </HeadCellContent>

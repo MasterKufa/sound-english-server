@@ -5,6 +5,7 @@ import { CSVManager } from './parts/CSVManager';
 import { PlayManager } from './parts/PlayManager';
 import { AllMethods } from './parts/AllMethods';
 import { AddOne } from './parts/AddOne';
+import { SelectedMethods } from './parts/SelectedMethods';
 
 export const Words: React.FC = () => (
   <>
@@ -15,6 +16,7 @@ export const Words: React.FC = () => (
       <AllMethods />
       <CSVManager />
       <PlayManager />
+      <SelectedMethods />
     </Box>
     <WordsTable />
   </>

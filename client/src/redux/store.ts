@@ -6,9 +6,10 @@ import main from './reducers/main';
 import dialog from './reducers/dialog';
 import notices from './reducers/notices';
 import wordsApi, { wordsApiSlice } from './reducers/api/words.api';
+import words from './reducers/words';
 
 export const store = configureStore({
-  reducer: { authApi, main, auth, dialog, notices, wordsApi },
+  reducer: { authApi, main, auth, dialog, notices, wordsApi, words },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({ serializableCheck: false }).concat([
       authApiSlice.middleware,

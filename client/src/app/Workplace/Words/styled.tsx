@@ -5,4 +5,6 @@ export const StyledStack = styled.div`
   display: flex;
   margin-bottom: ${theme.spacing(2)};
   gap: ${theme.spacing(1)};
+  flex-wrap: wrap;
+  justify-content: center;
 `;
