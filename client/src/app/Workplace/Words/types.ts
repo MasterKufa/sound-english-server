@@ -11,6 +11,12 @@ export enum Lang {
   russian = 'ru-RU',
 }
 
+export enum PlayModes {
+  ordinal = 'ordinal',
+  random = 'random',
+  lastOccurenceBased = 'lastOccurenceBased',
+}
+
 export type BuildUtercOpt = {
   ruVoice: SpeechSynthesisVoice | null;
   enVoice: SpeechSynthesisVoice | null;

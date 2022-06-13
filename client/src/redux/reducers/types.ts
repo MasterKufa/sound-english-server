@@ -34,7 +34,12 @@ export type EmittedToken = {
   token_type: string;
 };
 
-export type Word = { english: string; russian: string };
+export type Word = {
+  english: string;
+  russian: string;
+  id: number;
+  lastSpeechTimestamp: number;
+};
 
 declare global {
   interface Window {

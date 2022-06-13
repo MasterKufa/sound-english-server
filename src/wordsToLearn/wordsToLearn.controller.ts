@@ -53,4 +53,12 @@ export class WordsController {
       user: request.user,
     });
   }
+
+  @Post(ROUTES.API.WORDS.WORD_SPOKEN)
+  changeWordSpoken(@Req() request: ReqWithUser<{ id: number }>): Promise<void> {
+    return this.wordsService.changeWordSpoken({
+      ...request.body,
+      user: request.user,
+    });
+  }
 }

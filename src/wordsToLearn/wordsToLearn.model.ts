@@ -12,6 +12,9 @@ export class Word extends Model {
   @Column
   russian: string;
 
+  @Column({ defaultValue: 0 })
+  lastSpeechTimestamp: number;
+
   @ForeignKey(() => User)
   @Column
   userId: number;

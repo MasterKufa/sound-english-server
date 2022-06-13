@@ -25,9 +25,11 @@ export class WordsService {
   }
 
   async addMany(payload: WithUser<{ words: WordPayload[] }>): Promise<void> {
-    await this.wordModel.bulkCreate(
-      payload.words.map((x) => ({ ...x, userId: payload.user.id })),
+    const promises = payload.words.map((x) =>
+      this.wordModel.findOrCreate({ where: { ...x, userId: payload.user.id } }),
     );
+
+    await Promise.all(promises);
   }
 
   async deleteOne(payload: WithUser<{ id: number }>): Promise<void> {
@@ -46,5 +48,14 @@ export class WordsService {
     await this.wordModel.destroy({
       where: { userId: payload.user.id, id: { [Op.in]: payload.ids } },
     });
+  }
+
+  async changeWordSpoken(payload: WithUser<{ id: number }>): Promise<void> {
+    await this.wordModel.update(
+      { lastSpeechTimestamp: Date.now() },
+      {
+        where: { userId: payload.user.id, id: payload.id },
+      },
+    );
   }
 }

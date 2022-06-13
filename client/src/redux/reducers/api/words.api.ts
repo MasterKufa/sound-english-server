@@ -15,13 +15,29 @@ export const wordsApiSlice = createApi({
   }),
   tagTypes: [Tags.all],
   endpoints: (builder) => ({
-    addWord: builder.mutation<void, Word>({
+    addWord: builder.mutation<void, Partial<Word>>({
       query: (body) => ({
         url: ROUTES.WORDS.ADD_ONE,
         method: 'POST',
         body,
       }),
       invalidatesTags: [Tags.all],
+    }),
+    wordSpoken: builder.mutation<void, { id: number }>({
+      query: (body) => ({
+        url: ROUTES.WORDS.WORD_SPOKEN,
+        method: 'POST',
+        body,
+      }),
+      async onQueryStarted({ id }, { dispatch }) {
+        dispatch(
+          wordsApiSlice.util.updateQueryData('getAll', undefined, (draft) =>
+            draft.map((x) =>
+              x.id === id ? { ...x, lastSpeechTimestamp: Date.now() } : x,
+            ),
+          ),
+        );
+      },
     }),
     addManyWords: builder.mutation<void, Word[]>({
       query: (body) => ({
@@ -70,5 +86,6 @@ export const {
   useAddManyWordsMutation,
   useDeleteAllMutation,
   useDeleteWordsByIdsMutation,
+  useWordSpokenMutation,
 } = wordsApiSlice;
 export default wordsApiSlice.reducer;

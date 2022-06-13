@@ -15,6 +15,7 @@ export const ROUTES = {
     DELETE_ONE: '/delete_one',
     DELETE_ALL: '/delete_all',
     DELETE_BY_IDS: '/delete_by_ids',
+    WORD_SPOKEN: '/word_spoken',
     ALL: '/all',
   },
 };

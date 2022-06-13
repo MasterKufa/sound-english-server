@@ -1,7 +1,7 @@
 import { Button } from '@mui/material';
 import { useAppDispatch, useSESelector } from 'ducks/hooks';
 import { useDeleteWordsByIdsMutation } from 'ducks/reducers/api/words.api';
-import { clearSelected } from 'ducks/reducers/words';
+import { clearSelected, toggleSelectedWord } from 'ducks/reducers/words';
 import React from 'react';
 import { StyledStack } from '../styled';
 
@@ -23,7 +23,10 @@ export const SelectedMethods: React.FC = () => {
       <Button
         disabled={!selectedWordsId.length}
         variant="contained"
-        onClick={() => deleteByIds({ ids: selectedWordsId })}
+        onClick={() => {
+          deleteByIds({ ids: selectedWordsId });
+          dispatch(clearSelected());
+        }}
       >
         Delete Selected
       </Button>
