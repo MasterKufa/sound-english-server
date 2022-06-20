@@ -7,4 +7,6 @@ export class WordToLearn {
 export type WordPayload = {
   english: string;
   russian: string;
+  base64RuAudio?: string;
+  base64EnAudio?: string;
 };

@@ -1,7 +1,7 @@
 import { Button } from '@mui/material';
 import { useAppDispatch, useSESelector } from 'ducks/hooks';
 import { useDeleteWordsByIdsMutation } from 'ducks/reducers/api/words.api';
-import { clearSelected, toggleSelectedWord } from 'ducks/reducers/words';
+import { clearSelected } from 'ducks/reducers/words';
 import React from 'react';
 import { StyledStack } from '../styled';
 

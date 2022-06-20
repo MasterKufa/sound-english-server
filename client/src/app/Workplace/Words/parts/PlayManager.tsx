@@ -1,5 +1,7 @@
 import {
+  Box,
   Button,
+  Checkbox,
   FormControl,
   FormControlLabel,
   FormLabel,
@@ -9,16 +11,14 @@ import {
   RadioGroup,
   Select,
   SelectChangeEvent,
+  Slider,
 } from '@mui/material';
-import { useAppDispatch, useSESelector } from 'ducks/hooks';
+import { useSESelector } from 'ducks/hooks';
 import { useGetAllQuery } from 'ducks/reducers/api/words.api';
-import { Word } from 'ducks/reducers/types';
-import { changeCurrentWord } from 'ducks/reducers/words';
-import { first } from 'lodash';
-import { always, cond, equals } from 'ramda';
 import React, { useCallback, useEffect, useState } from 'react';
 import { StyledStack } from '../styled';
 import { Lang, PlayModes } from '../types';
+import { usePlayNext } from './hooks/usePlayNext';
 
 const buildUtterence = (
   text: string,
@@ -28,50 +28,44 @@ const buildUtterence = (
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = lang;
   utterance.voice = voice;
-  utterance.volume = 1;
+  utterance.volume = robotVolume;
   utterance.rate = 1;
   utterance.pitch = 1;
 
   return utterance;
 };
 
+const audio = document.createElement('audio');
+let robotVolume = 1;
+
 export const PlayManager: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [ruVoice, setRuVoice] = useState<SpeechSynthesisVoice | null>(null);
   const [enVoice, setEnVoice] = useState<SpeechSynthesisVoice | null>(null);
   const [voiceList, setVoiceList] = useState<SpeechSynthesisVoice[]>([]);
-  const [playMode, setPlayMode] = useState<PlayModes>(PlayModes.ordinal);
+  const [isPlayCustomAudio, setIsPlayCustomAudio] = useState<boolean>(true);
   const { currentWord } = useSESelector((state) => state.words);
-  const dispatch = useAppDispatch();
   const { data, isSuccess } = useGetAllQuery();
-
-  const defineNextWord = useCallback(() => {
-    if (!data) return;
-
-    const nextWord = cond<PlayModes[], Word>([
-      [
-        equals<PlayModes>(PlayModes.ordinal),
-        always(
-          (currentWord &&
-            data[data.findIndex((x) => x.id === currentWord.id) + 1]) ||
-            first(data)!,
-        ),
-      ],
-      [
-        equals<PlayModes>(PlayModes.random),
-        always(data[Math.floor(Math.random() * data.length)]),
-      ],
-      [
-        equals<PlayModes>(PlayModes.lastOccurenceBased),
-        always(data[Math.floor(Math.random() * data.length)]),
-      ],
-    ])(playMode);
-
-    dispatch(changeCurrentWord({ ...nextWord }));
-  }, [currentWord, dispatch, playMode, data]);
+  const { defineNextWord, setPlayMode, playMode } = usePlayNext();
 
   const speak = useCallback(() => {
     if (!currentWord) return;
+    if (
+      isPlayCustomAudio &&
+      currentWord.base64EnAudio &&
+      currentWord.base64RuAudio
+    ) {
+      audio.volume = 1;
+      audio.src = currentWord.base64EnAudio;
+      audio.play();
+      audio.onended = () => {
+        audio.src = currentWord.base64RuAudio;
+        audio.play();
+        audio.onended = defineNextWord;
+      };
+
+      return;
+    }
 
     const uterc = [
       buildUtterence(currentWord?.english, Lang.english, enVoice),
@@ -79,7 +73,7 @@ export const PlayManager: React.FC = () => {
     ];
     uterc.forEach((x) => speechSynthesis.speak(x));
     uterc[1].onend = defineNextWord;
-  }, [currentWord, defineNextWord, enVoice, ruVoice]);
+  }, [currentWord, defineNextWord, enVoice, ruVoice, isPlayCustomAudio]);
 
   useEffect(() => {
     if (isPlaying && !speechSynthesis.pending) speak();
@@ -108,9 +102,10 @@ export const PlayManager: React.FC = () => {
   );
 
   useEffect(() => {
+    audio.pause();
     isSuccess && defineNextWord();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isSuccess]);
+  }, [isSuccess, isPlayCustomAudio]);
 
   useEffect(() => {
     const x = () => setIsPlaying(false);
@@ -196,6 +191,33 @@ export const PlayManager: React.FC = () => {
             />
           </RadioGroup>
         </FormControl>
+      </StyledStack>
+      <StyledStack gap={3}>
+        <FormControlLabel
+          onChange={(_, checked) => setIsPlayCustomAudio(checked)}
+          control={<Checkbox defaultChecked />}
+          label="Play Custom Audio"
+        />
+        <Box>
+          Custom audio volume
+          <Slider
+            min={0}
+            step={0.01}
+            max={1}
+            defaultValue={1}
+            onChange={(_, val) => void (audio.volume = val as number)}
+          />
+        </Box>
+        <Box>
+          Robot audio volume
+          <Slider
+            min={0}
+            step={0.01}
+            max={1}
+            defaultValue={1}
+            onChange={(_, val) => (robotVolume = val as number)}
+          />
+        </Box>
       </StyledStack>
     </>
   );

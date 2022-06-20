@@ -1,4 +1,10 @@
-import { Column, ForeignKey, Model, Table } from 'sequelize-typescript';
+import {
+  Column,
+  ForeignKey,
+  Model,
+  Table,
+  DataType,
+} from 'sequelize-typescript';
 import { User } from 'src/users/users.model';
 
 @Table
@@ -12,7 +18,13 @@ export class Word extends Model {
   @Column
   russian: string;
 
-  @Column({ defaultValue: 0 })
+  @Column({ type: DataType.TEXT })
+  base64EnAudio: string;
+
+  @Column({ type: DataType.TEXT })
+  base64RuAudio: string;
+
+  @Column({ defaultValue: 0, type: DataType.BIGINT })
   lastSpeechTimestamp: number;
 
   @ForeignKey(() => User)
