@@ -6,6 +6,7 @@ import { PlayManager } from './parts/PlayManager';
 import { AllMethods } from './parts/AllMethods';
 import { AddOne } from './parts/AddOne';
 import { SelectedMethods } from './parts/SelectedMethods';
+import { CurrentPresenter } from './parts/CurrentPresenter';
 
 export const Words: React.FC = () => (
   <>
@@ -18,6 +19,7 @@ export const Words: React.FC = () => (
       <PlayManager />
       <SelectedMethods />
     </Box>
+    <CurrentPresenter />
     <WordsTable />
   </>
 );
