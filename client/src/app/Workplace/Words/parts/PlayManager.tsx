@@ -113,7 +113,6 @@ export const PlayManager: React.FC = () => {
 
     const unlockPhoneApi = () => {
       audio.play();
-      audio.pause();
       window.removeEventListener('click', unlockPhoneApi);
     };
     window.addEventListener('click', unlockPhoneApi);
@@ -225,6 +224,25 @@ export const PlayManager: React.FC = () => {
             onChange={(_, val) => (robotVolume = val as number)}
           />
         </Box>
+        {/* <Box>
+          Pause between, s
+          <Slider
+            defaultValue={1}
+            min={0.5}
+            max={10}
+            getAriaValueText={valuetext}
+            step={0.5}
+            marks={{
+              value: 0.5,
+              label: 0.5,
+            },
+            {
+              value: 10,
+              label: 10,
+            },}
+            valueLabelDisplay="on"
+          />
+        </Box> */}
       </StyledStack>
     </>
   );
