@@ -111,6 +111,13 @@ export const PlayManager: React.FC = () => {
     const x = () => setIsPlaying(false);
     window.addEventListener('onbeforeunload', x);
 
+    const unlockPhoneApi = () => {
+      audio.play();
+      audio.pause();
+      window.removeEventListener('click', unlockPhoneApi);
+    };
+    window.addEventListener('click', unlockPhoneApi);
+
     return () => window.removeEventListener('onbeforeunload', x);
   }, []);
 
