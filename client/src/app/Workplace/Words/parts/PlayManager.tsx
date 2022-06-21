@@ -35,7 +35,7 @@ const buildUtterence = (
   return utterance;
 };
 
-const audio = document.createElement('audio');
+const audio = new Audio();
 let robotVolume = 1;
 
 export const PlayManager: React.FC = () => {

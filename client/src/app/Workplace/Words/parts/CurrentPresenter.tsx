@@ -1,4 +1,4 @@
-import { Box, Paper, Typography } from '@mui/material';
+import { Paper, Typography } from '@mui/material';
 import { useSESelector } from 'ducks/hooks';
 import { Word } from 'ducks/reducers/types';
 import { theme } from 'globalStyle/theme';
@@ -34,6 +34,7 @@ export const CurrentPresenter: React.FC = () => {
         padding: theme.spacing(3),
         mb: theme.spacing(3),
         textAlign: 'center',
+        lineBreak: 'anywhere',
       }}
     >
       <Typography variant="h6">Now: </Typography>
