@@ -3,8 +3,8 @@ import {
   useGetAllQuery,
 } from 'ducks/reducers/api/words.api';
 import React, { useMemo } from 'react';
-import { TableFix } from '../../common/Table';
-import { Fixed } from '../../common/Table/types';
+import { TableFix } from '../../../../components/Table';
+import { Fixed } from '../../../../components/Table/types';
 import { Columns } from '../types';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { IconButton } from '@mui/material';

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from 'react';
 
 export const useOverflow = <T extends HTMLElement>() => {
   const [isOverflow, setIsOverflow] = useState<boolean>(false);
@@ -8,7 +8,7 @@ export const useOverflow = <T extends HTMLElement>() => {
     if (elRef.current)
       setIsOverflow(
         elRef.current.clientWidth >=
-          (elRef.current.parentElement?.clientWidth || 0)
+          (elRef.current.parentElement?.clientWidth || 0),
       );
   });
 
