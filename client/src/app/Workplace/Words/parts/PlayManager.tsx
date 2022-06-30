@@ -74,10 +74,8 @@ const addToAudioSeq = AudioSeq();
 const activateAudio = (audio: HTMLAudioElement) => {
   audio.play();
 
-  setTimeout(() => {
-    audio.pause();
-    audio.currentTime = 0;
-  }, 0);
+  audio.pause();
+  audio.currentTime = 0;
 };
 
 const isAudio = (item: unknown): item is HTMLAudioElement =>

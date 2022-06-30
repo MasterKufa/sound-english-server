@@ -30,7 +30,7 @@ const blobToBase64 = (blob: Blob[]): Promise<string> =>
     reader.onloadend = () => resolve(reader.result as string);
     reader.readAsDataURL(
       new Blob(blob, {
-        type: 'audio/ogg; codecs=opus',
+        type: 'audio/mp3',
       }),
     );
   });
@@ -105,7 +105,7 @@ export const AddOne: React.FC = () => {
         setState({ ...state, isPlaying: false });
       } else {
         const blob = new Blob(Lang.english === lang ? EnChunks : RuChunks, {
-          type: 'audio/ogg; codecs=opus',
+          type: 'audio/mp3',
         });
         const audioURL = window.URL.createObjectURL(blob);
         audio.src = audioURL;
