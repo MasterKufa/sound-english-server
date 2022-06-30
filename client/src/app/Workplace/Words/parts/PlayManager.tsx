@@ -73,8 +73,11 @@ const addToAudioSeq = AudioSeq();
 
 const activateAudio = (audio: HTMLAudioElement) => {
   audio.play();
-  audio.pause();
-  audio.currentTime = 0;
+
+  setTimeout(() => {
+    audio.pause();
+    audio.currentTime = 0;
+  }, 0);
 };
 
 const isAudio = (item: unknown): item is HTMLAudioElement =>
@@ -143,7 +146,8 @@ export const PlayManager: React.FC = () => {
           audio.ruAudio && activateAudio(audio.ruAudio);
         });
 
-        defineNextWord();
+        window.removeEventListener('click', activateHandler);
+        setTimeout(() => defineNextWord(), 0);
       };
 
       window.addEventListener('click', activateHandler);
