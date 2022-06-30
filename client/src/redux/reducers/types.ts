@@ -39,8 +39,10 @@ export type Word = {
   russian: string;
   id: number;
   lastSpeechTimestamp: number;
-  base64EnAudio: string;
-  base64RuAudio: string;
+  base64EnAudio?: string;
+  base64RuAudio?: string;
+  enAudio?: HTMLAudioElement;
+  ruAudio?: HTMLAudioElement;
 };
 
 declare global {

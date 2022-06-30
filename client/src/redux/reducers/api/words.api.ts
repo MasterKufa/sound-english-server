@@ -31,10 +31,13 @@ export const wordsApiSlice = createApi({
       }),
       async onQueryStarted({ id }, { dispatch }) {
         dispatch(
-          wordsApiSlice.util.updateQueryData('getAll', undefined, (draft) =>
-            draft.map((x) =>
-              x.id === id ? { ...x, lastSpeechTimestamp: Date.now() } : x,
-            ),
+          wordsApiSlice.util.updateQueryData(
+            'getAll',
+            undefined,
+            (draft) =>
+              draft.map((x) =>
+                x.id === id ? { ...x, lastSpeechTimestamp: Date.now() } : x,
+              ) as Word[],
           ),
         );
       },
@@ -74,6 +77,21 @@ export const wordsApiSlice = createApi({
       query: () => ({
         url: ROUTES.WORDS.ALL,
       }),
+      transformResponse: (baseQueryReturnValue: Word[]): Word[] =>
+        baseQueryReturnValue.map((word) => {
+          if (word?.base64EnAudio && word?.base64RuAudio) {
+            const enAudio = new Audio();
+            const ruAudio = new Audio();
+            enAudio.src = word.base64EnAudio;
+            ruAudio.src = word.base64RuAudio;
+            return {
+              ...word,
+              enAudio,
+              ruAudio,
+            };
+          }
+          return word;
+        }),
       providesTags: [Tags.all],
     }),
   }),

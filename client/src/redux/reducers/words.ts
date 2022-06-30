@@ -24,7 +24,7 @@ const wordsSlice = createSlice({
     clearSelected: (state, _: PayloadAction<void>) =>
       void (state.selectedWordsId = []),
     changeCurrentWord: (state, action: PayloadAction<Word | null>) =>
-      void (state.currentWord = action.payload),
+      void ((state.currentWord as Word | null) = action.payload),
   },
 });
 

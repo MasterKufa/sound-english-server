@@ -21,3 +21,8 @@ export type BuildUtercOpt = {
   ruVoice: SpeechSynthesisVoice | null;
   enVoice: SpeechSynthesisVoice | null;
 };
+
+export type AudioSequenceItem = {
+  audio: HTMLAudioElement | SpeechSynthesisUtterance;
+  onEnd?: () => void;
+};
