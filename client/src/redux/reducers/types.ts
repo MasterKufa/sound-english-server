@@ -45,6 +45,12 @@ export type Word = {
   ruAudio?: HTMLAudioElement;
 };
 
+export type CustomAudio = {
+  isRecording: boolean;
+  isPlaying: boolean;
+  hasRecord: boolean;
+};
+
 declare global {
   interface Window {
     localStorage: { authToken: string };

@@ -1,6 +1,6 @@
 import { Box, Button, IconButton, TextField } from '@mui/material';
 import { useAddWordMutation } from 'ducks/reducers/api/words.api';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback } from 'react';
 import KeyboardVoiceIcon from '@mui/icons-material/KeyboardVoice';
 import { StyledStack } from '../styled';
 import { theme } from 'globalStyle/theme';
@@ -8,147 +8,56 @@ import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import StopIcon from '@mui/icons-material/Stop';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import { Lang } from '../types';
-
-type CustomAudio = {
-  isRecording: boolean;
-  isPlaying: boolean;
-  hasRecord: boolean;
-};
-
-const DefaultCustomAudio = {
-  isRecording: false,
-  isPlaying: false,
-  hasRecord: false,
-};
-
-let EnChunks: Blob[] = [];
-let RuChunks: Blob[] = [];
-const audio = document.createElement('audio');
-const blobToBase64 = (blob: Blob[]): Promise<string> =>
-  new Promise((resolve, _) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result as string);
-    reader.readAsDataURL(
-      new Blob(blob, {
-        type: 'audio/mp3',
-      }),
-    );
-  });
+import { useAppDispatch, useSESelector } from 'ducks/hooks';
+import { resetAddWord, setInputWord } from 'ducks/reducers/words';
+import { useRecordCustomAudio } from './hooks/useRecordCustomAudio';
 
 export const AddOne: React.FC = () => {
-  const [english, setEnglish] = useState('');
-  const [russian, setRussian] = useState('');
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
-    null,
-  );
-  const [englishCustomAudio, setEnglishCustomAudio] =
-    useState<CustomAudio>(DefaultCustomAudio);
-  const [russianCustomAudio, setRussianCustomAudio] =
-    useState<CustomAudio>(DefaultCustomAudio);
+  const { addDraft } = useSESelector((state) => state.words);
+  const dispatch = useAppDispatch();
 
   const [addWord] = useAddWordMutation();
-
-  useEffect(() => {
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      navigator.mediaDevices
-        .getUserMedia({
-          audio: true,
-        })
-        .then((stream) => setMediaRecorder(new MediaRecorder(stream)));
-    }
-  }, []);
-
-  const onMicroClick = useCallback(
-    (lang: Lang) => () => {
-      if (!mediaRecorder) return;
-
-      const state =
-        lang === Lang.english ? englishCustomAudio : russianCustomAudio;
-
-      const setState =
-        lang === Lang.english ? setEnglishCustomAudio : setRussianCustomAudio;
-      if (state.hasRecord) {
-        EnChunks = [];
-
-        setState({ ...state, hasRecord: false });
-        return;
-      }
-      if (state.isRecording) {
-        mediaRecorder.stop();
-        setState({
-          ...state,
-          isRecording: false,
-          hasRecord: true,
-        });
-      } else {
-        mediaRecorder.ondataavailable = (e) => {
-          (Lang.english === lang ? EnChunks : RuChunks).push(e.data);
-        };
-        mediaRecorder.start();
-        setState({ ...state, isRecording: true });
-      }
-    },
-    [mediaRecorder, englishCustomAudio, russianCustomAudio],
-  );
-
-  const onPlayClick = useCallback(
-    (lang: Lang) => () => {
-      if (!englishCustomAudio.hasRecord) return;
-      const state =
-        lang === Lang.english ? englishCustomAudio : russianCustomAudio;
-
-      const setState =
-        lang === Lang.english ? setEnglishCustomAudio : setRussianCustomAudio;
-
-      if (state.isPlaying) {
-        audio.pause();
-        setState({ ...state, isPlaying: false });
-      } else {
-        const blob = new Blob(Lang.english === lang ? EnChunks : RuChunks, {
-          type: 'audio/mp3',
-        });
-        const audioURL = window.URL.createObjectURL(blob);
-        audio.src = audioURL;
-        audio.play();
-        setState({ ...state, isPlaying: true });
-
-        audio.onended = () => setState({ ...state, isPlaying: false });
-      }
-    },
-    [englishCustomAudio, russianCustomAudio],
-  );
-
+  const { onPlayClick, onMicroClick, readAudioChunks } = useRecordCustomAudio();
   const onAdd = useCallback(async () => {
-    const base64EnAudio = EnChunks.length
-      ? await blobToBase64(EnChunks)
-      : undefined;
-    const base64RuAudio = RuChunks.length
-      ? await blobToBase64(RuChunks)
-      : undefined;
-    addWord({ english, russian, base64EnAudio, base64RuAudio });
-    setEnglish('');
-    setRussian('');
-    EnChunks = [];
-    RuChunks = [];
-    setEnglishCustomAudio(DefaultCustomAudio);
-    setRussianCustomAudio(DefaultCustomAudio);
-  }, [addWord, english, russian]);
+    const { base64EnAudio, base64RuAudio } = await readAudioChunks();
+
+    addWord({
+      english: addDraft.input[Lang.english],
+      russian: addDraft.input[Lang.russian],
+      base64EnAudio,
+      base64RuAudio,
+    });
+
+    dispatch(resetAddWord());
+  }, [addWord, dispatch, addDraft, readAudioChunks]);
+
+  const onEnglishInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) =>
+      dispatch(setInputWord({ input: e.target.value, lang: Lang.english })),
+    [dispatch],
+  );
+
+  const onRussianInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) =>
+      dispatch(setInputWord({ input: e.target.value, lang: Lang.russian })),
+    [dispatch],
+  );
 
   return (
     <StyledStack>
       <TextField
         label="En"
-        value={english}
-        onChange={(e) => setEnglish(e.target.value)}
+        value={addDraft.input[Lang.english]}
+        onChange={onEnglishInputChange}
       />
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
         <IconButton onClick={onMicroClick(Lang.english)}>
-          {englishCustomAudio.hasRecord ? (
+          {addDraft.audio[Lang.english].hasRecord ? (
             <RestartAltIcon />
           ) : (
             <KeyboardVoiceIcon
               sx={{
-                color: englishCustomAudio.isRecording
+                color: addDraft.audio[Lang.english].isRecording
                   ? theme.palette.info.dark
                   : 'auto',
               }}
@@ -156,9 +65,9 @@ export const AddOne: React.FC = () => {
           )}
         </IconButton>
 
-        {englishCustomAudio.hasRecord && (
+        {addDraft.audio[Lang.english].hasRecord && (
           <IconButton onClick={onPlayClick(Lang.english)}>
-            {englishCustomAudio.isPlaying ? (
+            {addDraft.audio[Lang.english].isPlaying ? (
               <StopIcon />
             ) : (
               <PlayCircleOutlineIcon />
@@ -169,17 +78,17 @@ export const AddOne: React.FC = () => {
 
       <TextField
         label="Ru"
-        value={russian}
-        onChange={(e) => setRussian(e.target.value)}
+        value={addDraft.input[Lang.russian]}
+        onChange={onRussianInputChange}
       />
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
         <IconButton onClick={onMicroClick(Lang.russian)}>
-          {russianCustomAudio.hasRecord ? (
+          {addDraft.audio[Lang.russian].hasRecord ? (
             <RestartAltIcon />
           ) : (
             <KeyboardVoiceIcon
               sx={{
-                color: russianCustomAudio.isRecording
+                color: addDraft.audio[Lang.russian].isRecording
                   ? theme.palette.info.dark
                   : 'auto',
               }}
@@ -187,9 +96,9 @@ export const AddOne: React.FC = () => {
           )}
         </IconButton>
 
-        {russianCustomAudio.hasRecord && (
+        {addDraft.audio[Lang.russian].hasRecord && (
           <IconButton onClick={onPlayClick(Lang.russian)}>
-            {russianCustomAudio.isPlaying ? (
+            {addDraft.audio[Lang.russian].isPlaying ? (
               <StopIcon />
             ) : (
               <PlayCircleOutlineIcon />
@@ -198,7 +107,9 @@ export const AddOne: React.FC = () => {
         )}
       </Box>
       <Button
-        disabled={!russian || !english}
+        disabled={
+          !addDraft.input[Lang.russian] || !addDraft.audio[Lang.english]
+        }
         variant="contained"
         onClick={onAdd}
       >
