@@ -35,3 +35,6 @@ export const activateAudioHandler = (audios: HTMLAudioElement[]) => {
 
   return removeHandlers;
 };
+
+export const isAudio = (item: unknown): item is HTMLAudioElement =>
+  Boolean((item as HTMLAudioElement)?.play);

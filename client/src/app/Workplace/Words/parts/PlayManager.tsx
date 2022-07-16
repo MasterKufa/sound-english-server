@@ -13,102 +13,78 @@ import {
   SelectChangeEvent,
   Slider,
 } from '@mui/material';
-import { useSESelector } from 'ducks/hooks';
+import {
+  activateAudio,
+  activateAudioHandler,
+  isAudio,
+} from 'app/Workplace/helpers';
+import { useAppDispatch, useSESelector } from 'ducks/hooks';
 import { useGetAllQuery } from 'ducks/reducers/api/words.api';
-import React, { useCallback, useEffect, useState } from 'react';
+import {
+  setCustomVolume,
+  setIsPlayCustomAudio,
+  setIsPlaying,
+  setPauseBetween,
+  setRobotVolume,
+  setVoice,
+  setVoiceList,
+} from 'ducks/reducers/words';
+import { compose, isNil, not } from 'ramda';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyledStack } from '../styled';
 import { AudioSequenceItem, Lang, PlayModes } from '../types';
+import { buildUtterence, useAudioSeq } from './hooks/useAudioSequence';
 import { usePlayNext } from './hooks/usePlayNext';
 
-const buildUtterence = (
-  text: string,
-  lang: string,
-  voice: SpeechSynthesisVoice | null,
-) => {
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = lang;
-  utterance.voice = voice;
-  utterance.volume = robotVolume;
-  utterance.rate = 1;
-  utterance.pitch = 1;
-
-  return utterance;
-};
-
-let robotVolume = 1;
-let customVolume = 1;
-
-const AudioSeq = () => {
-  const buf: AudioSequenceItem[] = [];
-  let isPlaying = false;
-
-  const tryToPlay = () => {
-    const item = buf.shift();
-    if (!item) return;
-
-    const end = () => {
-      item?.onEnd && item.onEnd();
-      isPlaying = false;
-      tryToPlay();
-    };
-
-    isPlaying = true;
-    if (isAudio(item.audio)) {
-      item.audio.volume = customVolume;
-      item.audio.play();
-      item.audio.onended = end;
-    } else {
-      speechSynthesis.speak(item.audio);
-      item.audio.onend = end;
-    }
-  };
-
-  return (item: AudioSequenceItem) => {
-    buf.push(item);
-    !isPlaying && tryToPlay();
-  };
-};
-
-const addToAudioSeq = AudioSeq();
-
-const activateAudio = (audio: HTMLAudioElement) => {
-  audio.play();
-
-  audio.pause();
-  audio.currentTime = 0;
-};
-
-const isAudio = (item: unknown): item is HTMLAudioElement =>
-  Boolean((item as HTMLAudioElement)?.play);
-
 export const PlayManager: React.FC = () => {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [ruVoice, setRuVoice] = useState<SpeechSynthesisVoice | null>(null);
-  const [pauseBetween, setPauseBetween] = useState<number>(0.5);
-  const [enVoice, setEnVoice] = useState<SpeechSynthesisVoice | null>(null);
-  const [voiceList, setVoiceList] = useState<SpeechSynthesisVoice[]>([]);
-  const [isPlayCustomAudio, setIsPlayCustomAudio] = useState<boolean>(true);
-  const { currentWord } = useSESelector((state) => state.words);
+  const {
+    currentWord,
+    isPlaying,
+    isPlayCustomAudio,
+    voice,
+    pauseBetween,
+    voiceList,
+    robotVolume,
+  } = useSESelector((state) => state.words);
+  const dispatch = useAppDispatch();
   const { data, isSuccess } = useGetAllQuery();
   const { defineNextWord, setPlayMode, playMode } = usePlayNext();
+  const { queueAudio } = useAudioSeq();
 
   const speak = useCallback(() => {
     if (!currentWord) return;
 
-    addToAudioSeq({
+    queueAudio({
       audio:
         isPlayCustomAudio && currentWord?.enAudio
           ? currentWord?.enAudio
-          : buildUtterence(currentWord?.english, Lang.english, enVoice),
+          : buildUtterence(
+              currentWord?.english,
+              Lang.english,
+              voice[Lang.english],
+              robotVolume,
+            ),
     });
-    addToAudioSeq({
+    queueAudio({
       audio:
         isPlayCustomAudio && currentWord?.ruAudio
           ? currentWord?.ruAudio
-          : buildUtterence(currentWord?.russian, Lang.russian, ruVoice),
+          : buildUtterence(
+              currentWord?.russian,
+              Lang.russian,
+              voice[Lang.russian],
+              robotVolume,
+            ),
       onEnd: defineNextWord,
     });
-  }, [currentWord, defineNextWord, enVoice, ruVoice, isPlayCustomAudio]);
+  }, [
+    currentWord,
+    queueAudio,
+    isPlayCustomAudio,
+    voice,
+    robotVolume,
+    defineNextWord,
+  ]);
 
   useEffect(() => {
     if (isPlaying && !speechSynthesis.pending) speak();
@@ -116,45 +92,52 @@ export const PlayManager: React.FC = () => {
     if (!isPlaying) speechSynthesis.cancel();
   }, [isPlaying, speak]);
 
-  useEffect(() => {
-    window.speechSynthesis.getVoices();
-
-    window.speechSynthesis.onvoiceschanged = () => {
-      const voices = window.speechSynthesis.getVoices();
-      setVoiceList(voices);
-      setRuVoice(voices.find((x) => x.lang === Lang.russian) || null);
-      setEnVoice(voices.find((x) => x.lang === Lang.english) || null);
-    };
-  }, []);
-
-  const changeVoice = useCallback(
-    (setter: (x: SpeechSynthesisVoice) => void) =>
-      (e: SelectChangeEvent<string>) => {
-        setIsPlaying(false);
-        setter(voiceList.find((x) => x.name === e.target.value)!);
-      },
-    [setIsPlaying, voiceList],
+  const buildVoicePayload = useCallback(
+    (lang: Lang) => ({
+      voice: voiceList.find((x) => x.lang === lang) || null,
+      lang,
+    }),
+    [voiceList],
   );
 
   useEffect(() => {
-    if (isSuccess) {
-      const activateHandler = () => {
-        data.forEach((audio) => {
-          audio.enAudio && activateAudio(audio.enAudio);
-          audio.ruAudio && activateAudio(audio.ruAudio);
-        });
+    window.speechSynthesis.getVoices();
+    window.speechSynthesis.onvoiceschanged = () => {
+      const voices = window.speechSynthesis.getVoices();
+      dispatch(setVoiceList(voices));
+    };
+  }, [dispatch]);
 
-        window.removeEventListener('click', activateHandler);
-        setTimeout(() => defineNextWord(), 0);
-      };
+  useEffect(() => {
+    dispatch(setVoice(buildVoicePayload(Lang.english)));
+    dispatch(setVoice(buildVoicePayload(Lang.russian)));
+  }, [buildVoicePayload, dispatch]);
 
-      window.addEventListener('click', activateHandler);
+  const changeVoice = useCallback(
+    (lang: Lang) => (e: SelectChangeEvent<string>) => {
+      dispatch(setIsPlaying(false));
+      dispatch(
+        setVoice({
+          voice: voiceList.find((x) => x.name === e.target.value)!,
+          lang,
+        }),
+      );
+    },
+    [dispatch, voiceList],
+  );
 
-      return () => window.removeEventListener('click', activateHandler);
-    }
+  const audiosToActivate = useMemo(
+    () =>
+      (data || [])
+        .map((audio) => [audio.enAudio, audio.ruAudio])
+        .filter(compose(not, isNil))
+        .flat() as HTMLAudioElement[],
+    [data],
+  );
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isSuccess]);
+  useEffect(() => {
+    activateAudioHandler(audiosToActivate);
+  }, [audiosToActivate]);
 
   return (
     <>
@@ -164,9 +147,9 @@ export const PlayManager: React.FC = () => {
           <Select
             sx={{ width: '125px' }}
             labelId="en-voice"
-            value={enVoice?.name || ''}
+            value={voice[Lang.english]?.name || ''}
             label="En Voice"
-            onChange={changeVoice(setEnVoice)}
+            onChange={changeVoice(Lang.english)}
           >
             {voiceList
               .filter((x) => x.lang === Lang.english && x.name)
@@ -182,9 +165,9 @@ export const PlayManager: React.FC = () => {
           <Select
             sx={{ width: '125px' }}
             labelId="ru-voice"
-            value={ruVoice?.name || ''}
+            value={voice[Lang.russian]?.name || ''}
             label="Ru Voice"
-            onChange={changeVoice(setRuVoice)}
+            onChange={changeVoice(Lang.russian)}
           >
             {voiceList
               .filter((x) => x.lang === Lang.russian && x.name)
@@ -236,7 +219,7 @@ export const PlayManager: React.FC = () => {
       </StyledStack>
       <StyledStack gap={3}>
         <FormControlLabel
-          onChange={(_, checked) => setIsPlayCustomAudio(checked)}
+          onChange={(_, checked) => dispatch(setIsPlayCustomAudio(checked))}
           control={<Checkbox defaultChecked />}
           label="Play Custom Audio"
         />
@@ -247,7 +230,7 @@ export const PlayManager: React.FC = () => {
             step={0.01}
             max={1}
             defaultValue={1}
-            onChange={(_, val) => void (customVolume = val as number)}
+            onChange={(_, val) => dispatch(setCustomVolume(val as number))}
           />
         </Box>
         <Box>
@@ -257,13 +240,13 @@ export const PlayManager: React.FC = () => {
             step={0.01}
             max={1}
             defaultValue={1}
-            onChange={(_, val) => (robotVolume = val as number)}
+            onChange={(_, val) => dispatch(setRobotVolume(val as number))}
           />
         </Box>
         <Box sx={{ width: '185px' }}>
           Pause between(s) = {pauseBetween}
           <Slider
-            onChange={(_, val) => setPauseBetween(val as number)}
+            onChange={(_, val) => dispatch(setPauseBetween(val as number))}
             value={pauseBetween}
             min={0.5}
             max={10}

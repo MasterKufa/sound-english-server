@@ -12,6 +12,13 @@ type WordsState = {
   selectedWordsId: number[];
   currentWord: Word | null;
   addDraft: AddDraft;
+  isPlaying: boolean;
+  isPlayCustomAudio: boolean;
+  voice: Record<Lang, SpeechSynthesisVoice | null>;
+  pauseBetween: number;
+  voiceList: SpeechSynthesisVoice[];
+  robotVolume: number;
+  customVolume: number;
 };
 
 export const DefaultCustomAudio = {
@@ -35,6 +42,16 @@ const initialState: WordsState = {
   selectedWordsId: [],
   currentWord: null,
   addDraft: DefaultAddDraft,
+  isPlaying: false,
+  isPlayCustomAudio: true,
+  voice: {
+    [Lang.english]: null,
+    [Lang.russian]: null,
+  },
+  pauseBetween: 0.5,
+  voiceList: [],
+  robotVolume: 1,
+  customVolume: 1,
 };
 
 const wordsSlice = createSlice({
@@ -74,6 +91,22 @@ const wordsSlice = createSlice({
     ) =>
       void (state.addDraft.input[action.payload.lang] = action.payload.input),
     resetAddWord: (state) => void (state.addDraft = DefaultAddDraft),
+    setIsPlaying: (state, action: PayloadAction<boolean>) =>
+      void (state.isPlaying = action.payload),
+    setIsPlayCustomAudio: (state, action: PayloadAction<boolean>) =>
+      void (state.isPlayCustomAudio = action.payload),
+    setVoice: (
+      state,
+      action: PayloadAction<{ lang: Lang; voice: SpeechSynthesisVoice | null }>,
+    ) => void (state.voice[action.payload.lang] = action.payload.voice),
+    setVoiceList: (state, action: PayloadAction<SpeechSynthesisVoice[]>) =>
+      void (state.voiceList = action.payload),
+    setPauseBetween: (state, action: PayloadAction<number>) =>
+      void (state.pauseBetween = action.payload),
+    setRobotVolume: (state, action: PayloadAction<number>) =>
+      void (state.robotVolume = action.payload),
+    setCustomVolume: (state, action: PayloadAction<number>) =>
+      void (state.customVolume = action.payload),
   },
 });
 
@@ -86,6 +119,13 @@ export const {
   setCustomAudioHasRecord,
   setInputWord,
   resetAddWord,
+  setIsPlaying,
+  setVoice,
+  setVoiceList,
+  setPauseBetween,
+  setIsPlayCustomAudio,
+  setRobotVolume,
+  setCustomVolume,
 } = wordsSlice.actions;
 
 export default wordsSlice.reducer;
