@@ -1,5 +1,6 @@
 import { isAudio } from 'app/Workplace/helpers';
 import { useSESelector } from 'ducks/hooks';
+import { useCallback, useRef, useState } from 'react';
 import { AudioSequenceItem } from '../../types';
 
 export const buildUtterence = (
@@ -20,20 +21,25 @@ export const buildUtterence = (
 
 export const useAudioSeq = () => {
   const { customVolume } = useSESelector((state) => state.words);
-  const buf: AudioSequenceItem[] = [];
-  let isPlaying = false;
+  const [seqPlaying, setSeqPlaying] = useState(false);
+  const [seqEmpty, setSeqEmpty] = useState(true);
+  const buf = useRef<AudioSequenceItem[]>([]);
 
-  const tryToPlay = () => {
-    const item = buf.shift();
-    if (!item) return;
+  const tryToPlay = useCallback(() => {
+    const item = buf.current.shift();
+    if (!item) {
+      setSeqEmpty(true);
+      return;
+    }
+    setSeqEmpty(false);
 
     const end = () => {
       item?.onEnd && item.onEnd();
-      isPlaying = false;
+      setSeqPlaying(false);
       tryToPlay();
     };
 
-    isPlaying = true;
+    setSeqPlaying(true);
     if (isAudio(item.audio)) {
       item.audio.volume = customVolume;
       item.audio.play();
@@ -42,12 +48,17 @@ export const useAudioSeq = () => {
       speechSynthesis.speak(item.audio);
       item.audio.onend = end;
     }
-  };
+  }, [customVolume]);
 
   return {
-    queueAudio: (item: AudioSequenceItem) => {
-      buf.push(item);
-      !isPlaying && tryToPlay();
-    },
+    queueAudio: useCallback(
+      (items: AudioSequenceItem[]) => {
+        buf.current.push(...items);
+        !seqPlaying && tryToPlay();
+      },
+      [seqPlaying, tryToPlay],
+    ),
+    seqPlaying,
+    seqEmpty,
   };
 };

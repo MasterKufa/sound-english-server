@@ -17,7 +17,8 @@ export const AddOne: React.FC = () => {
   const dispatch = useAppDispatch();
 
   const [addWord] = useAddWordMutation();
-  const { onPlayClick, onMicroClick, readAudioChunks } = useRecordCustomAudio();
+  const { onPlayClick, onMicroClick, readAudioChunks, resetCustomAudio } =
+    useRecordCustomAudio();
   const onAdd = useCallback(async () => {
     const { base64EnAudio, base64RuAudio } = await readAudioChunks();
 
@@ -27,9 +28,9 @@ export const AddOne: React.FC = () => {
       base64EnAudio,
       base64RuAudio,
     });
-
     dispatch(resetAddWord());
-  }, [addWord, dispatch, addDraft, readAudioChunks]);
+    resetCustomAudio();
+  }, [addWord, dispatch, addDraft, readAudioChunks, resetCustomAudio]);
 
   const onEnglishInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) =>

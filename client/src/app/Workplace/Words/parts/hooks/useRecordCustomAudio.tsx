@@ -98,9 +98,15 @@ export const useRecordCustomAudio = () => {
     };
   }, []);
 
+  const resetCustomAudio = useCallback(
+    () => (localAudio.current = DEFAULT_LOCAL_AUDIO),
+    [],
+  );
+
   return {
     onPlayClick,
     onMicroClick,
     readAudioChunks,
+    resetCustomAudio,
   };
 };

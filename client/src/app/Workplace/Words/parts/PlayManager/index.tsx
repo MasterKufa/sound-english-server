@@ -13,11 +13,7 @@ import {
   SelectChangeEvent,
   Slider,
 } from '@mui/material';
-import {
-  activateAudio,
-  activateAudioHandler,
-  isAudio,
-} from 'app/Workplace/helpers';
+import { activateAudioHandler } from 'app/Workplace/helpers';
 import { useAppDispatch, useSESelector } from 'ducks/hooks';
 import { useGetAllQuery } from 'ducks/reducers/api/words.api';
 import {
@@ -30,11 +26,11 @@ import {
   setVoiceList,
 } from 'ducks/reducers/words';
 import { compose, isNil, not } from 'ramda';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { StyledStack } from '../styled';
-import { AudioSequenceItem, Lang, PlayModes } from '../types';
-import { buildUtterence, useAudioSeq } from './hooks/useAudioSequence';
-import { usePlayNext } from './hooks/usePlayNext';
+import React, { useCallback, useEffect, useMemo } from 'react';
+import { StyledStack } from '../../styled';
+import { Lang, PlayModes } from '../../types';
+import { buildUtterence, useAudioSeq } from '../hooks/useAudioSequence';
+import { usePlayNext } from '../hooks/usePlayNext';
 
 export const PlayManager: React.FC = () => {
   const {
@@ -47,36 +43,42 @@ export const PlayManager: React.FC = () => {
     robotVolume,
   } = useSESelector((state) => state.words);
   const dispatch = useAppDispatch();
-  const { data, isSuccess } = useGetAllQuery();
+  const { data } = useGetAllQuery();
   const { defineNextWord, setPlayMode, playMode } = usePlayNext();
-  const { queueAudio } = useAudioSeq();
+  const { queueAudio, seqEmpty } = useAudioSeq();
+
+  useEffect(() => {
+    if (!currentWord) defineNextWord();
+  }, [currentWord, defineNextWord]);
 
   const speak = useCallback(() => {
     if (!currentWord) return;
 
-    queueAudio({
-      audio:
-        isPlayCustomAudio && currentWord?.enAudio
-          ? currentWord?.enAudio
-          : buildUtterence(
-              currentWord?.english,
-              Lang.english,
-              voice[Lang.english],
-              robotVolume,
-            ),
-    });
-    queueAudio({
-      audio:
-        isPlayCustomAudio && currentWord?.ruAudio
-          ? currentWord?.ruAudio
-          : buildUtterence(
-              currentWord?.russian,
-              Lang.russian,
-              voice[Lang.russian],
-              robotVolume,
-            ),
-      onEnd: defineNextWord,
-    });
+    queueAudio([
+      {
+        audio:
+          isPlayCustomAudio && currentWord?.enAudio
+            ? currentWord?.enAudio
+            : buildUtterence(
+                currentWord?.english,
+                Lang.english,
+                voice[Lang.english],
+                robotVolume,
+              ),
+      },
+      {
+        audio:
+          isPlayCustomAudio && currentWord?.ruAudio
+            ? currentWord?.ruAudio
+            : buildUtterence(
+                currentWord?.russian,
+                Lang.russian,
+                voice[Lang.russian],
+                robotVolume,
+              ),
+        onEnd: defineNextWord,
+      },
+    ]);
   }, [
     currentWord,
     queueAudio,
@@ -87,10 +89,12 @@ export const PlayManager: React.FC = () => {
   ]);
 
   useEffect(() => {
-    if (isPlaying && !speechSynthesis.pending) speak();
+    if (isPlaying && seqEmpty) {
+      speak();
+    }
 
     if (!isPlaying) speechSynthesis.cancel();
-  }, [isPlaying, speak]);
+  }, [isPlaying, seqEmpty, speak]);
 
   const buildVoicePayload = useCallback(
     (lang: Lang) => ({
@@ -128,10 +132,11 @@ export const PlayManager: React.FC = () => {
 
   const audiosToActivate = useMemo(
     () =>
-      (data || [])
-        .map((audio) => [audio.enAudio, audio.ruAudio])
-        .filter(compose(not, isNil))
-        .flat() as HTMLAudioElement[],
+      (
+        (data || [])
+          .map((audio) => [audio.enAudio, audio.ruAudio])
+          .flat() as HTMLAudioElement[]
+      ).filter(compose(not, isNil)),
     [data],
   );
 
@@ -184,7 +189,7 @@ export const PlayManager: React.FC = () => {
             sx={{ height: '60px' }}
             variant="contained"
             onClick={() => {
-              setIsPlaying(!isPlaying);
+              dispatch(setIsPlaying(!isPlaying));
             }}
           >
             {isPlaying ? 'Stop' : 'Play'}

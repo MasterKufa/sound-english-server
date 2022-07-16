@@ -79,19 +79,19 @@ export const wordsApiSlice = createApi({
       }),
       transformResponse: (baseQueryReturnValue: Word[]): Word[] =>
         baseQueryReturnValue.map((word) => {
-          if (word?.base64EnAudio && word?.base64RuAudio) {
-            const enAudio = new Audio();
-            const ruAudio = new Audio();
-            enAudio.src = word.base64EnAudio;
-            ruAudio.src = word.base64RuAudio;
-            return {
-              ...word,
-              enAudio,
-              ruAudio,
-            };
-          }
-          return word;
+          const enAudio = word?.base64EnAudio ? new Audio() : undefined;
+          if (enAudio) enAudio.src = word.base64EnAudio!;
+
+          const ruAudio = word?.base64RuAudio ? new Audio() : undefined;
+          if (ruAudio) ruAudio.src = word.base64EnAudio!;
+
+          return {
+            ...word,
+            enAudio,
+            ruAudio,
+          };
         }),
+
       providesTags: [Tags.all],
     }),
   }),

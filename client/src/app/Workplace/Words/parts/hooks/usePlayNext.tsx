@@ -49,7 +49,7 @@ export const usePlayNext = () => {
       ],
     ])(playMode);
 
-    dispatch(changeCurrentWord({ ...nextWord }));
+    nextWord && dispatch(changeCurrentWord({ ...nextWord }));
   }, [data, currentWord, wordSpoken, playMode, dispatch]);
 
   return { defineNextWord, setPlayMode, playMode };
