@@ -70,11 +70,6 @@ export const PlayManager: React.FC = () => {
 
     if (!isPlaying) {
       speechSynthesis.cancel();
-
-      //SAFARI CANCEL UTER DURING PLAY, SO ON END NOT TRIGGERED AND YOU NEED MANUALLY DROP THE QUEUE
-      !seqEmpty && setSeqEmpty(true);
-      seqPlaying && setSeqPlaying(false);
-      //
     }
   }, [isPlaying, seqEmpty, setSeqEmpty, speak, seqPlaying, setSeqPlaying]);
 
@@ -90,7 +85,9 @@ export const PlayManager: React.FC = () => {
 
   useEffect(() => {
     activateAudioHandler(audiosToActivate);
-  }, [audiosToActivate]);
+
+    // AS THOUGHT ONLY LEN
+  }, [audiosToActivate.length]);
 
   return (
     <>
