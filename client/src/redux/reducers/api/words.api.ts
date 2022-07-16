@@ -83,7 +83,7 @@ export const wordsApiSlice = createApi({
           if (enAudio) enAudio.src = word.base64EnAudio!;
 
           const ruAudio = word?.base64RuAudio ? new Audio() : undefined;
-          if (ruAudio) ruAudio.src = word.base64EnAudio!;
+          if (ruAudio) ruAudio.src = word.base64RuAudio!;
 
           return {
             ...word,

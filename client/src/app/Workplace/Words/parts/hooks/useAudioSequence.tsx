@@ -34,6 +34,7 @@ export const useAudioSeq = () => {
     setSeqEmpty(false);
 
     const end = () => {
+      console.log('end');
       item?.onEnd && item.onEnd();
       setSeqPlaying(false);
       tryToPlay();
@@ -45,8 +46,13 @@ export const useAudioSeq = () => {
       item.audio.play();
       item.audio.onended = end;
     } else {
+      console.log('speechSynthesis');
       speechSynthesis.speak(item.audio);
+      console.log('speechSynthesis1');
       item.audio.onend = end;
+
+      // VERY STRANGE SAFARI FIX. DONT TOUCH ME!!!!! SAFARI TRIGGER ON END ONLY IF AUDIO IS STORED GLOBAL (I E CONSOLE)
+      (window as any).__continuePlay = item.audio;
     }
   }, [customVolume]);
 
@@ -54,11 +60,14 @@ export const useAudioSeq = () => {
     queueAudio: useCallback(
       (items: AudioSequenceItem[]) => {
         buf.current.push(...items);
+        console.log(buf.current, seqPlaying);
         !seqPlaying && tryToPlay();
       },
       [seqPlaying, tryToPlay],
     ),
-    seqPlaying,
     seqEmpty,
+    seqPlaying,
+    setSeqEmpty,
+    setSeqPlaying,
   };
 };
