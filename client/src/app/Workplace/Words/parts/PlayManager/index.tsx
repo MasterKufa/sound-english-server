@@ -4,7 +4,7 @@ import { useAppDispatch, useSESelector } from 'ducks/hooks';
 import { useGetAllQuery } from 'ducks/reducers/api/words.api';
 import { setIsPlaying } from 'ducks/reducers/words';
 import { compose, isNil, not } from 'ramda';
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { StyledStack } from '../../styled';
 import { Lang } from '../../types';
 import { buildUtterence, useAudioSeq } from '../hooks/useAudioSequence';
@@ -14,13 +14,19 @@ import { PlayProperties } from './PlayProperties';
 import { VoiceControl } from './VoiceControl';
 
 export const PlayManager: React.FC = () => {
-  const { currentWord, isPlaying, isPlayCustomAudio, voice, robotVolume } =
-    useSESelector((state) => state.words);
+  const {
+    currentWord,
+    isPlaying,
+    isPlayCustomAudio,
+    voice,
+    robotVolume,
+    pauseBetween,
+  } = useSESelector((state) => state.words);
   const dispatch = useAppDispatch();
   const { data } = useGetAllQuery();
   const { defineNextWord } = usePlayNext();
-  const { queueAudio, seqEmpty, setSeqEmpty, setSeqPlaying, seqPlaying } =
-    useAudioSeq();
+  const { queueAudio, seqEmpty, setSeqPlaying, seqPlaying } = useAudioSeq();
+  const nextWordTimeout = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!currentWord) defineNextWord();
@@ -50,28 +56,34 @@ export const PlayManager: React.FC = () => {
                 voice[Lang.russian],
                 robotVolume,
               ),
-        onEnd: defineNextWord,
       },
     ]);
-  }, [
-    currentWord,
-    queueAudio,
-    isPlayCustomAudio,
-    voice,
-    robotVolume,
-    defineNextWord,
-  ]);
+  }, [currentWord, queueAudio, isPlayCustomAudio, voice, robotVolume]);
 
   useEffect(() => {
-    console.log(isPlaying, seqEmpty);
-    if (isPlaying && seqEmpty) {
-      speak();
+    console.log(pauseBetween);
+    if (isPlaying && seqEmpty.current && !nextWordTimeout.current) {
+      nextWordTimeout.current = setTimeout(() => {
+        defineNextWord();
+        speak();
+        nextWordTimeout.current = null;
+      }, pauseBetween * 1000);
     }
 
     if (!isPlaying) {
       speechSynthesis.cancel();
+      nextWordTimeout.current && clearTimeout(nextWordTimeout.current);
+      nextWordTimeout.current = null;
     }
-  }, [isPlaying, seqEmpty, setSeqEmpty, speak, seqPlaying, setSeqPlaying]);
+  }, [
+    isPlaying,
+    speak,
+    seqPlaying,
+    setSeqPlaying,
+    pauseBetween,
+    defineNextWord,
+    seqEmpty,
+  ]);
 
   const audiosToActivate = useMemo(
     () =>

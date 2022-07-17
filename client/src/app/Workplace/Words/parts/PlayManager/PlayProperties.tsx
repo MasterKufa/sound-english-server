@@ -29,7 +29,7 @@ export const PlayProperties: React.FC = () => {
           min={0}
           step={0.01}
           max={1}
-          defaultValue={1}
+          defaultValue={customVolume}
           onChange={(_, val) => dispatch(setCustomVolume(val as number))}
         />
       </Box>
@@ -40,7 +40,7 @@ export const PlayProperties: React.FC = () => {
           min={0}
           step={0.01}
           max={1}
-          defaultValue={1}
+          defaultValue={robotVolume}
           onChange={(_, val) => dispatch(setRobotVolume(val as number))}
         />
       </Box>
