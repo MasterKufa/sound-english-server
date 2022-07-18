@@ -16,6 +16,7 @@ type WordsState = {
   isPlayCustomAudio: boolean;
   voice: Record<Lang, SpeechSynthesisVoice | null>;
   pauseBetween: number;
+  repeatWord: number;
   voiceList: SpeechSynthesisVoice[];
   robotVolume: number;
   customVolume: number;
@@ -49,6 +50,7 @@ const initialState: WordsState = {
     [Lang.russian]: null,
   },
   pauseBetween: 0.5,
+  repeatWord: 1,
   voiceList: [],
   robotVolume: 1,
   customVolume: 1,
@@ -107,6 +109,8 @@ const wordsSlice = createSlice({
       void (state.robotVolume = action.payload),
     setCustomVolume: (state, action: PayloadAction<number>) =>
       void (state.customVolume = action.payload),
+    changeRepeatWord: (state, action: PayloadAction<number>) =>
+      void (state.repeatWord = action.payload),
   },
 });
 
@@ -126,6 +130,7 @@ export const {
   setIsPlayCustomAudio,
   setRobotVolume,
   setCustomVolume,
+  changeRepeatWord,
 } = wordsSlice.actions;
 
 export default wordsSlice.reducer;

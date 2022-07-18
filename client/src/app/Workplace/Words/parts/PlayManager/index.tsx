@@ -3,10 +3,11 @@ import { activateAudioHandler } from 'app/Workplace/helpers';
 import { useAppDispatch, useSESelector } from 'ducks/hooks';
 import { useGetAllQuery } from 'ducks/reducers/api/words.api';
 import { setIsPlaying } from 'ducks/reducers/words';
+import { last, range, repeat } from 'lodash';
 import { compose, isNil, not } from 'ramda';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { StyledStack } from '../../styled';
-import { Lang } from '../../types';
+import { AudioSequenceItem, Lang } from '../../types';
 import { buildUtterence, useAudioSeq } from '../hooks/useAudioSequence';
 import { usePlayNext } from '../hooks/usePlayNext';
 import { PlayMode } from './PlayMode';
@@ -21,6 +22,7 @@ export const PlayManager: React.FC = () => {
     voice,
     robotVolume,
     pauseBetween,
+    repeatWord,
   } = useSESelector((state) => state.words);
   const dispatch = useAppDispatch();
   const { data } = useGetAllQuery();
@@ -32,7 +34,7 @@ export const PlayManager: React.FC = () => {
   const speak = useCallback(() => {
     if (!currentWord) return;
 
-    queueAudio([
+    const queuePayload = range(repeatWord).flatMap(() => [
       {
         audio:
           isPlayCustomAudio && currentWord?.enAudio
@@ -54,22 +56,26 @@ export const PlayManager: React.FC = () => {
                 voice[Lang.russian],
                 robotVolume,
               ),
-        onEnd: () => {
-          nextWordTimeout.current = setTimeout(() => {
-            defineNextWord();
-            nextWordTimeout.current = null;
-          }, pauseBetween * 1000);
-        },
       },
-    ]);
+    ]) as AudioSequenceItem[];
+
+    last(queuePayload)!.onEnd = () => {
+      nextWordTimeout.current = setTimeout(() => {
+        defineNextWord();
+        nextWordTimeout.current = null;
+      }, pauseBetween * 1000);
+    };
+
+    queueAudio(queuePayload);
   }, [
     currentWord,
+    repeatWord,
     queueAudio,
     isPlayCustomAudio,
     voice,
     robotVolume,
-    defineNextWord,
     pauseBetween,
+    defineNextWord,
   ]);
 
   useEffect(() => {
@@ -91,6 +97,7 @@ export const PlayManager: React.FC = () => {
     pauseBetween,
     defineNextWord,
     seqEmpty,
+    customPlayingNow,
   ]);
 
   const audiosToActivate = useMemo(

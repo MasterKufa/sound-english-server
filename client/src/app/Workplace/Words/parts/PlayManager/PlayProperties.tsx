@@ -1,6 +1,8 @@
 import { Box, Checkbox, FormControlLabel, Slider } from '@mui/material';
+import { NumericInput } from 'components/NumericInput';
 import { useAppDispatch, useSESelector } from 'ducks/hooks';
 import {
+  changeRepeatWord,
   setCustomVolume,
   setIsPlayCustomAudio,
   setIsPlaying,
@@ -8,11 +10,17 @@ import {
   setRobotVolume,
 } from 'ducks/reducers/words';
 import React from 'react';
+
 import { StyledStack } from '../../styled';
 
 export const PlayProperties: React.FC = () => {
-  const { pauseBetween, robotVolume, customVolume, isPlayCustomAudio } =
-    useSESelector((state) => state.words);
+  const {
+    pauseBetween,
+    robotVolume,
+    customVolume,
+    isPlayCustomAudio,
+    repeatWord,
+  } = useSESelector((state) => state.words);
   const dispatch = useAppDispatch();
 
   return (
@@ -75,6 +83,17 @@ export const PlayProperties: React.FC = () => {
               label: 10,
             },
           ]}
+        />
+      </Box>
+      <Box sx={{ width: '185px' }}>
+        Repeat word (times)
+        <NumericInput
+          min={1}
+          value={repeatWord}
+          onChange={(val) => {
+            dispatch(setIsPlaying(false));
+            dispatch(changeRepeatWord(val));
+          }}
         />
       </Box>
     </StyledStack>
