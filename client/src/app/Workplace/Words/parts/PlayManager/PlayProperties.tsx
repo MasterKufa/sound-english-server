@@ -3,6 +3,7 @@ import { useAppDispatch, useSESelector } from 'ducks/hooks';
 import {
   setCustomVolume,
   setIsPlayCustomAudio,
+  setIsPlaying,
   setPauseBetween,
   setRobotVolume,
 } from 'ducks/reducers/words';
@@ -18,7 +19,10 @@ export const PlayProperties: React.FC = () => {
     <StyledStack gap={3}>
       <FormControlLabel
         value={isPlayCustomAudio}
-        onChange={(_, checked) => dispatch(setIsPlayCustomAudio(checked))}
+        onChange={(_, checked) => {
+          dispatch(setIsPlaying(false));
+          dispatch(setIsPlayCustomAudio(checked));
+        }}
         control={<Checkbox defaultChecked />}
         label="Play Custom Audio"
       />
@@ -30,7 +34,10 @@ export const PlayProperties: React.FC = () => {
           step={0.01}
           max={1}
           defaultValue={customVolume}
-          onChange={(_, val) => dispatch(setCustomVolume(val as number))}
+          onChange={(_, val) => {
+            dispatch(setIsPlaying(false));
+            dispatch(setCustomVolume(val as number));
+          }}
         />
       </Box>
       <Box>
@@ -41,13 +48,19 @@ export const PlayProperties: React.FC = () => {
           step={0.01}
           max={1}
           defaultValue={robotVolume}
-          onChange={(_, val) => dispatch(setRobotVolume(val as number))}
+          onChange={(_, val) => {
+            dispatch(setIsPlaying(false));
+            dispatch(setRobotVolume(val as number));
+          }}
         />
       </Box>
       <Box sx={{ width: '185px' }}>
         Pause between(s) = {pauseBetween}
         <Slider
-          onChange={(_, val) => dispatch(setPauseBetween(val as number))}
+          onChange={(_, val) => {
+            dispatch(setIsPlaying(false));
+            dispatch(setPauseBetween(val as number));
+          }}
           value={pauseBetween}
           min={0.5}
           max={10}

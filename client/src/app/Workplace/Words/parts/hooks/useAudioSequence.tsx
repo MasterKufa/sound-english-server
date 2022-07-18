@@ -23,6 +23,7 @@ export const useAudioSeq = () => {
   const { customVolume } = useSESelector((state) => state.words);
   const [seqPlaying, setSeqPlaying] = useState(false);
   const seqEmpty = useRef(true);
+  const customPlayingNow = useRef<HTMLAudioElement>();
   const buf = useRef<AudioSequenceItem[]>([]);
 
   const tryToPlay = useCallback(() => {
@@ -43,6 +44,7 @@ export const useAudioSeq = () => {
     if (isAudio(item.audio)) {
       item.audio.volume = customVolume;
       item.audio.play();
+      customPlayingNow.current = item.audio;
       item.audio.onended = end;
     } else {
       speechSynthesis.speak(item.audio);
@@ -64,5 +66,6 @@ export const useAudioSeq = () => {
     seqEmpty,
     seqPlaying,
     setSeqPlaying,
+    customPlayingNow,
   };
 };

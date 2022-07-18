@@ -25,15 +25,13 @@ export const PlayManager: React.FC = () => {
   const dispatch = useAppDispatch();
   const { data } = useGetAllQuery();
   const { defineNextWord } = usePlayNext();
-  const { queueAudio, seqEmpty, setSeqPlaying, seqPlaying } = useAudioSeq();
+  const { queueAudio, seqEmpty, setSeqPlaying, seqPlaying, customPlayingNow } =
+    useAudioSeq();
   const nextWordTimeout = useRef<NodeJS.Timeout | null>(null);
-
-  useEffect(() => {
-    if (!currentWord) defineNextWord();
-  }, [currentWord, defineNextWord]);
 
   const speak = useCallback(() => {
     if (!currentWord) return;
+
     queueAudio([
       {
         audio:
@@ -56,22 +54,32 @@ export const PlayManager: React.FC = () => {
                 voice[Lang.russian],
                 robotVolume,
               ),
+        onEnd: () => {
+          nextWordTimeout.current = setTimeout(() => {
+            defineNextWord();
+            nextWordTimeout.current = null;
+          }, pauseBetween * 1000);
+        },
       },
     ]);
-  }, [currentWord, queueAudio, isPlayCustomAudio, voice, robotVolume]);
+  }, [
+    currentWord,
+    queueAudio,
+    isPlayCustomAudio,
+    voice,
+    robotVolume,
+    defineNextWord,
+    pauseBetween,
+  ]);
 
   useEffect(() => {
-    console.log(pauseBetween);
     if (isPlaying && seqEmpty.current && !nextWordTimeout.current) {
-      nextWordTimeout.current = setTimeout(() => {
-        defineNextWord();
-        speak();
-        nextWordTimeout.current = null;
-      }, pauseBetween * 1000);
+      speak();
     }
 
     if (!isPlaying) {
       speechSynthesis.cancel();
+      customPlayingNow.current?.pause();
       nextWordTimeout.current && clearTimeout(nextWordTimeout.current);
       nextWordTimeout.current = null;
     }
@@ -110,6 +118,7 @@ export const PlayManager: React.FC = () => {
             sx={{ height: '60px' }}
             variant="contained"
             onClick={() => {
+              if (!currentWord) defineNextWord();
               dispatch(setIsPlaying(!isPlaying));
             }}
           >

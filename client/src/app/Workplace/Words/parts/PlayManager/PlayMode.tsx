@@ -5,19 +5,13 @@ import {
   Radio,
   RadioGroup,
 } from '@mui/material';
-import { useSESelector } from 'ducks/hooks';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { StyledStack } from '../../styled';
 import { PlayModes } from '../../types';
 import { usePlayNext } from '../hooks/usePlayNext';
 
 export const PlayMode: React.FC = () => {
-  const { currentWord } = useSESelector((state) => state.words);
-  const { defineNextWord, setPlayMode, playMode } = usePlayNext();
-
-  useEffect(() => {
-    if (!currentWord) defineNextWord();
-  }, [currentWord, defineNextWord]);
+  const { setPlayMode, playMode } = usePlayNext();
 
   return (
     <StyledStack>
