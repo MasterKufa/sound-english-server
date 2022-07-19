@@ -3,7 +3,7 @@ import { activateAudioHandler } from 'app/Workplace/helpers';
 import { useAppDispatch, useSESelector } from 'ducks/hooks';
 import { useGetAllQuery } from 'ducks/reducers/api/words.api';
 import { setIsPlaying } from 'ducks/reducers/words';
-import { last, range, repeat } from 'lodash';
+import { last, range } from 'lodash';
 import { compose, isNil, not } from 'ramda';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { StyledStack } from '../../styled';
@@ -12,6 +12,7 @@ import { buildUtterence, useAudioSeq } from '../hooks/useAudioSequence';
 import { usePlayNext } from '../hooks/usePlayNext';
 import { PlayMode } from './PlayMode';
 import { PlayProperties } from './PlayProperties';
+import { Timer } from './Timer';
 import { VoiceControl } from './VoiceControl';
 
 export const PlayManager: React.FC = () => {
@@ -135,6 +136,7 @@ export const PlayManager: React.FC = () => {
       </StyledStack>
       <PlayMode />
       <PlayProperties />
+      <Timer />
     </>
   );
 };

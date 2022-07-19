@@ -86,8 +86,8 @@ export const PlayProperties: React.FC = () => {
         />
       </Box>
       <Box sx={{ width: '185px' }}>
-        Repeat word (times)
         <NumericInput
+          label="Repeat word (times)"
           min={1}
           value={repeatWord}
           onChange={(val) => {

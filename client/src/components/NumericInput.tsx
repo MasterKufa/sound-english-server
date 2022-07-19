@@ -13,20 +13,34 @@ const IconButtonStyled: FC<IconButtonProps> = (props) => (
   </IconButton>
 );
 
+export enum NumericEvent {
+  inc = 'inc',
+  dec = 'dec',
+}
+
 export const NumericInput: FC<{
   value: number;
-  onChange: (value: number) => void;
+  onChange: (value: number, event: NumericEvent) => void;
   max?: number;
   min?: number;
-}> = ({ value, onChange, max = 10, min = 1 }) => {
+  disabled?: boolean;
+  label?: string;
+  width?: number;
+}> = ({ value, onChange, max = 10, min = 1, disabled, label, width }) => {
   return (
-    <Box sx={{ display: 'flex' }}>
-      <TextField size="small" value={value} />
-      <Box>
-        <IconButtonStyled onClick={() => value < max && onChange(value + 1)}>
+    <Box sx={{ display: 'flex', width }}>
+      <TextField label={label} disabled={disabled} size="small" value={value} />
+      <Box sx={{ width: 'min-content' }}>
+        <IconButtonStyled
+          disabled={disabled}
+          onClick={() => value < max && onChange(value + 1, NumericEvent.inc)}
+        >
           <KeyboardArrowUpIcon sx={{ fontSize: 18 }} />
         </IconButtonStyled>
-        <IconButtonStyled onClick={() => value > min && onChange(value - 1)}>
+        <IconButtonStyled
+          disabled={disabled}
+          onClick={() => value > min && onChange(value - 1, NumericEvent.dec)}
+        >
           <KeyboardArrowDownIcon sx={{ fontSize: 18 }} />
         </IconButtonStyled>
       </Box>
