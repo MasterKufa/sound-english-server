@@ -55,16 +55,16 @@ export const Timer: React.FC = () => {
           label="hh"
           value={Math.floor(ss / 3600)}
           width={70}
-          disabled={!isNil(isActiveTimer)}
+          disabled={isActiveTimer}
           onChange={onChange(3600)}
         />
         <NumericInput
           min={0}
           max={60}
-          value={Math.floor(ss / 60)}
+          value={Math.floor((ss % 3600) / 60)}
           label="mm"
           width={70}
-          disabled={!isNil(isActiveTimer)}
+          disabled={isActiveTimer}
           onChange={onChange(60)}
         />
         <NumericInput
@@ -73,7 +73,7 @@ export const Timer: React.FC = () => {
           value={ss % 60}
           label="ss"
           width={70}
-          disabled={!isNil(isActiveTimer)}
+          disabled={isActiveTimer}
           onChange={onChange(1)}
         />
       </Box>
