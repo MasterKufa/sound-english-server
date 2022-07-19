@@ -28,8 +28,14 @@ export const PlayManager: React.FC = () => {
   const dispatch = useAppDispatch();
   const { data } = useGetAllQuery();
   const { defineNextWord } = usePlayNext();
-  const { queueAudio, seqEmpty, setSeqPlaying, seqPlaying, customPlayingNow } =
-    useAudioSeq();
+  const {
+    queueAudio,
+    seqEmpty,
+    setSeqPlaying,
+    seqPlaying,
+    customPlayingNow,
+    clearSeq,
+  } = useAudioSeq();
   const nextWordTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const speak = useCallback(() => {
@@ -89,8 +95,10 @@ export const PlayManager: React.FC = () => {
       customPlayingNow.current?.pause();
       nextWordTimeout.current && clearTimeout(nextWordTimeout.current);
       nextWordTimeout.current = null;
+      clearSeq();
     }
   }, [
+    clearSeq,
     isPlaying,
     speak,
     seqPlaying,

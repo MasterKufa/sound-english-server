@@ -63,6 +63,11 @@ export const useAudioSeq = () => {
       },
       [seqPlaying, tryToPlay],
     ),
+    clearSeq: useCallback(() => {
+      buf.current = [];
+      setSeqPlaying(false);
+      seqEmpty.current = true;
+    }, []),
     seqEmpty,
     seqPlaying,
     setSeqPlaying,
