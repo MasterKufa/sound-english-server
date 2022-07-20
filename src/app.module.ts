@@ -5,7 +5,7 @@ import { AuthModule } from './auth/auth.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { DB_VARIABLES } from './constants';
 import { Dialect } from 'sequelize/types';
-import { WordsModule } from './wordsToLearn/wordsToLearn.module';
+import { WordsModule } from './wordsToLearn/words/wordsToLearn.module';
 
 const dbURIRegexp = /postgres:\/\/(.*):(.*)@(.*):(.*)\/(.*)/;
 

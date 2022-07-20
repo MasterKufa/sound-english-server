@@ -10,3 +10,8 @@ export type WordPayload = {
   base64RuAudio?: string;
   base64EnAudio?: string;
 };
+
+export type TranslatePayload = {
+  russian?: string;
+  english?: string;
+};

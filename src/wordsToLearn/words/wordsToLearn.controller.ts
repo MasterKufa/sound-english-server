@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Req } from '@nestjs/common';
 import { ReqWithUser } from 'src/auth/types';
 import { ROUTES } from 'src/routes.constants';
-import { WordPayload, WordToLearn } from './types';
+import { TranslatePayload, WordPayload, WordToLearn } from './types';
 import { WordsService } from './wordsToLearn.service';
 
 @Controller(ROUTES.API.WORDS.BASE)
@@ -57,6 +57,15 @@ export class WordsController {
   @Post(ROUTES.API.WORDS.WORD_SPOKEN)
   changeWordSpoken(@Req() request: ReqWithUser<{ id: number }>): Promise<void> {
     return this.wordsService.changeWordSpoken({
+      ...request.body,
+      user: request.user,
+    });
+  }
+  @Post(ROUTES.API.WORDS.TRANSLATE)
+  translateWord(
+    @Req() request: ReqWithUser<TranslatePayload>,
+  ): Promise<TranslatePayload> {
+    return this.wordsService.translateWord({
       ...request.body,
       user: request.user,
     });

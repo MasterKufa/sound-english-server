@@ -51,6 +51,11 @@ export type CustomAudio = {
   hasRecord: boolean;
 };
 
+export type TranslatePayload = {
+  russian?: string;
+  english?: string;
+};
+
 declare global {
   interface Window {
     localStorage: { authToken: string };

@@ -1,6 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { ROUTES } from '../../constants';
-import { Word } from '../types';
+import { TranslatePayload, Word } from '../types';
 import { addAuthHeader } from './helpers';
 
 enum Tags {
@@ -22,6 +22,13 @@ export const wordsApiSlice = createApi({
         body,
       }),
       invalidatesTags: [Tags.all],
+    }),
+    translateWord: builder.mutation<TranslatePayload, TranslatePayload>({
+      query: (body) => ({
+        url: ROUTES.WORDS.TRANSLATE,
+        method: 'POST',
+        body,
+      }),
     }),
     wordSpoken: builder.mutation<void, { id: number }>({
       query: (body) => ({
@@ -105,5 +112,6 @@ export const {
   useDeleteAllMutation,
   useDeleteWordsByIdsMutation,
   useWordSpokenMutation,
+  useTranslateWordMutation,
 } = wordsApiSlice;
 export default wordsApiSlice.reducer;

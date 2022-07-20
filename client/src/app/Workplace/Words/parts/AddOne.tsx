@@ -1,5 +1,8 @@
 import { Box, Button, IconButton, TextField } from '@mui/material';
-import { useAddWordMutation } from 'ducks/reducers/api/words.api';
+import {
+  useAddWordMutation,
+  useTranslateWordMutation,
+} from 'ducks/reducers/api/words.api';
 import React, { useCallback } from 'react';
 import KeyboardVoiceIcon from '@mui/icons-material/KeyboardVoice';
 import { StyledStack } from '../styled';
@@ -11,12 +14,16 @@ import { Lang } from '../types';
 import { useAppDispatch, useSESelector } from 'ducks/hooks';
 import { resetAddWord, setInputWord } from 'ducks/reducers/words';
 import { useRecordCustomAudio } from './hooks/useRecordCustomAudio';
+import { TranslatePayload } from 'ducks/reducers/types';
+import { LoadingButton } from '@mui/lab';
 
 export const AddOne: React.FC = () => {
   const { addDraft } = useSESelector((state) => state.words);
   const dispatch = useAppDispatch();
-
   const [addWord] = useAddWordMutation();
+  const [translate, { isLoading: translateLoading }] =
+    useTranslateWordMutation();
+
   const { onPlayClick, onMicroClick, readAudioChunks, resetCustomAudio } =
     useRecordCustomAudio();
   const onAdd = useCallback(async () => {
@@ -31,6 +38,30 @@ export const AddOne: React.FC = () => {
     dispatch(resetAddWord());
     resetCustomAudio();
   }, [addWord, dispatch, addDraft, readAudioChunks, resetCustomAudio]);
+
+  const onTranslate = useCallback(() => {
+    if (addDraft.input[Lang.english]) {
+      translate({ english: addDraft.input[Lang.english] }).then((res) =>
+        dispatch(
+          setInputWord({
+            input: (res as { data: TranslatePayload })?.data?.russian || '',
+            lang: Lang.russian,
+          }),
+        ),
+      );
+    }
+
+    if (addDraft.input[Lang.russian]) {
+      translate({ english: addDraft.input[Lang.english] }).then((res) =>
+        dispatch(
+          setInputWord({
+            input: (res as { data: TranslatePayload })?.data?.english || '',
+            lang: Lang.english,
+          }),
+        ),
+      );
+    }
+  }, [addDraft.input, translate, dispatch]);
 
   const onEnglishInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -109,13 +140,26 @@ export const AddOne: React.FC = () => {
       </Box>
       <Button
         disabled={
-          !addDraft.input[Lang.russian] || !addDraft.audio[Lang.english]
+          !addDraft.input[Lang.russian] || !addDraft.input[Lang.english]
         }
         variant="contained"
         onClick={onAdd}
       >
         Add
       </Button>
+      <LoadingButton
+        disabled={
+          Boolean(
+            !addDraft.input[Lang.russian] && !addDraft.input[Lang.english],
+          ) ||
+          Boolean(addDraft.input[Lang.russian] && addDraft.input[Lang.english])
+        }
+        loading={translateLoading}
+        variant="contained"
+        onClick={onTranslate}
+      >
+        Translate
+      </LoadingButton>
     </StyledStack>
   );
 };

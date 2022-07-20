@@ -2,9 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Word as WordModel } from './wordsToLearn.model';
 import { Sequelize } from 'sequelize-typescript';
-import { WordPayload, WordToLearn } from './types';
+import { TranslatePayload, WordPayload, WordToLearn } from './types';
 import { WithUser } from 'src/auth/types';
 import { Op } from 'sequelize';
+import * as translate from '@vitalets/google-translate-api';
 
 @Injectable()
 export class WordsService {
@@ -57,5 +58,29 @@ export class WordsService {
         where: { userId: payload.user.id, id: payload.id },
       },
     );
+  }
+
+  async translateWord(
+    payload: WithUser<TranslatePayload>,
+  ): Promise<TranslatePayload> {
+    try {
+      if (payload.russian) {
+        const res = await translate(payload.russian, {
+          from: 'ru',
+          to: 'en',
+        });
+
+        return { english: res.text };
+      }
+
+      const res = await translate(payload.english, {
+        from: 'en',
+        to: 'ru',
+      });
+
+      return { russian: res.text };
+    } catch {
+      return { russian: '', english: '' };
+    }
   }
 }
