@@ -1,4 +1,4 @@
-import { WordToLearn } from 'src/wordsToLearn/types';
+import { WordToLearn } from 'src/wordsToLearn/words/types';
 
 export const enum Roles {
   admin = 'admin',

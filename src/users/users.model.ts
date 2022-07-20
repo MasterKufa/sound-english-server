@@ -1,15 +1,7 @@
-import {
-  BelongsTo,
-  Column,
-  ForeignKey,
-  HasMany,
-  IsEmail,
-  Model,
-  Table,
-} from 'sequelize-typescript';
+import { Column, HasMany, IsEmail, Model, Table } from 'sequelize-typescript';
 import { Roles } from './types';
-import { WordToLearn } from 'src/wordsToLearn/types';
-import { Word } from 'src/wordsToLearn/wordsToLearn.model';
+import { WordToLearn } from 'src/wordsToLearn/words/types';
+import { Word } from 'src/wordsToLearn/words/wordsToLearn.model';
 
 @Table
 export class User extends Model {
