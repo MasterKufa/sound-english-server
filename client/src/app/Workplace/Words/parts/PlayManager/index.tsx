@@ -1,13 +1,12 @@
 import { Button } from '@mui/material';
-import { activateAudioHandler } from 'app/Workplace/helpers';
 import { useAppDispatch, useSESelector } from 'ducks/hooks';
 import { useGetAllQuery } from 'ducks/reducers/api/words.api';
 import { setIsPlaying } from 'ducks/reducers/words';
 import { last, range } from 'lodash';
-import { compose, isNil, not } from 'ramda';
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { StyledStack } from '../../styled';
 import { AudioSequenceItem, Lang } from '../../types';
+import { useAudioPhoneMaintain } from '../hooks/useAudioPhoneMaintain';
 import { buildUtterence, useAudioSeq } from '../hooks/useAudioSequence';
 import { usePlayNext } from '../hooks/usePlayNext';
 import { PlayMode } from './PlayMode';
@@ -109,21 +108,7 @@ export const PlayManager: React.FC = () => {
     customPlayingNow,
   ]);
 
-  const audiosToActivate = useMemo(
-    () =>
-      (
-        (data || [])
-          .map((audio) => [audio.enAudio, audio.ruAudio])
-          .flat() as HTMLAudioElement[]
-      ).filter(compose(not, isNil)),
-    [data],
-  );
-
-  useEffect(() => {
-    activateAudioHandler(audiosToActivate);
-
-    // AS THOUGHT ONLY LEN
-  }, [audiosToActivate.length]);
+  useAudioPhoneMaintain(data);
 
   return (
     <>

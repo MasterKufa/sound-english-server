@@ -11,7 +11,8 @@
                     "ducks": "./src/redux",
                     "components": "./src/components",
                     "globalStyle": "./src/globalStyle",
-                    "app": "./src/app",
+                    "assets": "./src/assets",
+                    "app": "./src/app"
                 }
             }
         ]
