@@ -5,13 +5,15 @@ import {
   Radio,
   RadioGroup,
 } from '@mui/material';
+import { useAppDispatch, useSESelector } from 'ducks/hooks';
+import { changePlayMode } from 'ducks/reducers/words';
 import React from 'react';
 import { StyledStack } from '../../styled';
 import { PlayModes } from '../../types';
-import { usePlayNext } from '../hooks/usePlayNext';
 
 export const PlayMode: React.FC = () => {
-  const { setPlayMode, playMode } = usePlayNext();
+  const { playMode } = useSESelector((state) => state.words);
+  const dispatch = useAppDispatch();
 
   return (
     <StyledStack>
@@ -19,7 +21,7 @@ export const PlayMode: React.FC = () => {
         <FormLabel>Play Mode</FormLabel>
         <RadioGroup
           value={playMode}
-          onChange={(_, val) => setPlayMode(val as PlayModes)}
+          onChange={(_, val) => dispatch(changePlayMode(val as PlayModes))}
           row
         >
           <FormControlLabel

@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Lang } from 'app/Workplace/Words/types';
+import { Lang, PlayModes } from 'app/Workplace/Words/types';
 import { xor } from 'lodash';
 import { CustomAudio, Word } from './types';
 
@@ -20,6 +20,7 @@ type WordsState = {
   voiceList: SpeechSynthesisVoice[];
   robotVolume: number;
   customVolume: number;
+  playMode: PlayModes;
 };
 
 export const DefaultCustomAudio = {
@@ -54,6 +55,7 @@ const initialState: WordsState = {
   voiceList: [],
   robotVolume: 1,
   customVolume: 1,
+  playMode: PlayModes.ordinal,
 };
 
 const wordsSlice = createSlice({
@@ -111,6 +113,8 @@ const wordsSlice = createSlice({
       void (state.customVolume = action.payload),
     changeRepeatWord: (state, action: PayloadAction<number>) =>
       void (state.repeatWord = action.payload),
+    changePlayMode: (state, action: PayloadAction<PlayModes>) =>
+      void (state.playMode = action.payload),
   },
 });
 
@@ -131,6 +135,7 @@ export const {
   setRobotVolume,
   setCustomVolume,
   changeRepeatWord,
+  changePlayMode,
 } = wordsSlice.actions;
 
 export default wordsSlice.reducer;

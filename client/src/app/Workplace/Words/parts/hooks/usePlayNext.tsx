@@ -7,14 +7,13 @@ import { Word } from 'ducks/reducers/types';
 import { changeCurrentWord } from 'ducks/reducers/words';
 import { first } from 'lodash';
 import { always, cond, equals } from 'ramda';
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import { PlayModes } from '../../types';
 
 export const usePlayNext = () => {
   const [wordSpoken] = useWordSpokenMutation();
-  const { currentWord } = useSESelector((state) => state.words);
+  const { currentWord, playMode } = useSESelector((state) => state.words);
   const { data } = useGetAllQuery();
-  const [playMode, setPlayMode] = useState<PlayModes>(PlayModes.ordinal);
 
   const dispatch = useAppDispatch();
 
@@ -52,5 +51,5 @@ export const usePlayNext = () => {
     nextWord && dispatch(changeCurrentWord({ ...nextWord }));
   }, [data, currentWord, wordSpoken, playMode, dispatch]);
 
-  return { defineNextWord, setPlayMode, playMode };
+  return { defineNextWord, playMode };
 };
