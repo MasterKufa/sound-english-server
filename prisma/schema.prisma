@@ -1,0 +1,27 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model WordUnit {
+  id            Int     @id @default(autoincrement())
+  lang          String
+  text          String
+  customAudioId String?
+  audioId       String?
+
+  sourceWords Word[] @relation(name: "sourceWords")
+  targetWords Word[] @relation(name: "targetWords")
+}
+
+model Word {
+  id               Int      @id @default(autoincrement())
+  sourceWord       WordUnit @relation(fields: [sourceWordUnitId], references: [id], name: "sourceWords")
+  targetWord       WordUnit @relation(fields: [targetWordUnitId], references: [id], name: "targetWords")
+  sourceWordUnitId Int
+  targetWordUnitId Int
+}

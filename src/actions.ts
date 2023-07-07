@@ -1,0 +1,4 @@
+export enum ACTIONS {
+  SAVE_WORD = "SAVE_WORD",
+  LOAD_WORDS = "LOAD_WORDS",
+}
