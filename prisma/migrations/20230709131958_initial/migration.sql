@@ -3,8 +3,6 @@ CREATE TABLE "WordUnit" (
     "id" SERIAL NOT NULL,
     "lang" TEXT NOT NULL,
     "text" TEXT NOT NULL,
-    "customAudioId" TEXT,
-    "audioId" TEXT,
 
     CONSTRAINT "WordUnit_pkey" PRIMARY KEY ("id")
 );
@@ -12,6 +10,7 @@ CREATE TABLE "WordUnit" (
 -- CreateTable
 CREATE TABLE "Word" (
     "id" SERIAL NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "sourceWordUnitId" INTEGER NOT NULL,
     "targetWordUnitId" INTEGER NOT NULL,
 

@@ -1,11 +1,7 @@
 {
-  "name": "authorization-server",
+  "name": "sound-english-server",
   "version": "1.0.0",
-  "description": "Authorization server.",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/MasterKufa/authorization-server.git"
-  },
+  "description": "sound-english-server",
   "scripts": {
     "watch": "nodemon -e ts -w ./src -x npm run watch:serve",
     "watch:serve": "ts-node ./src/index.ts",
@@ -13,19 +9,13 @@
   },
   "author": "Roman Kaluger",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/MasterKufa/authorization-server/issues"
-  },
-  "homepage": "https://github.com/MasterKufa/authorization-server#readme",
   "dependencies": {
     "@prisma/client": "^4.15.0",
-    "jsonwebtoken": "^9.0.0",
     "lodash": "^4.17.21",
     "socket.io": "^4.6.2",
     "ts-node": "^10.9.1"
   },
   "devDependencies": {
-    "@types/jsonwebtoken": "^9.0.2",
     "@types/lodash": "^4.14.195",
     "@types/node": "^20.2.5",
     "@typescript-eslint/eslint-plugin": "^5.59.7",

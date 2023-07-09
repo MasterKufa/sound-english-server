@@ -22,6 +22,14 @@ export type WordReqBody = {
   id?: number;
 };
 
+export type WordUnitAudioBody = {
+  id: number;
+};
+
+export type DeleteWordPayload = {
+  id: number;
+};
+
 export type WordUnitReqBody = {
   lang: Lang;
   text: string;
