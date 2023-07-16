@@ -1,10 +1,11 @@
-import { Server, Socket } from "socket.io";
+import { Socket } from "socket.io";
 import { ACTIONS } from "./actions";
 import { vocabularyApi } from "./vocabulary.api";
+import { createServer } from "@master_kufa/server-tools";
 
-const io = new Server(3000);
+const server = createServer({ withAuthorization: true });
 
-io.on("connection", (socket: Socket) => {
+server.on("connection", (socket: Socket) => {
   socket.on(
     ACTIONS.SAVE_WORD,
     vocabularyApi.handle.bind(vocabularyApi, ACTIONS.SAVE_WORD, socket),

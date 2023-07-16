@@ -1,28 +1,9 @@
 import { vocabularyService } from "./vocabulary.service";
 import { ACTIONS } from "./actions";
 import { Socket } from "socket.io";
-import {
-  ApiHandlers,
-  SocketResponse,
-  WordReqBody,
-  Request,
-  WordUnitAudioBody,
-  DeleteWordPayload,
-} from "./types";
+import { WordReqBody, WordUnitAudioBody, DeleteWordPayload } from "./types";
 import { Word } from "@prisma/client";
-
-// toDO extract to lib and in auth too
-export class Api {
-  constructor(private handlers: ApiHandlers) {}
-
-  async handle(action: ACTIONS, socket: Socket, payload: { id?: string }) {
-    try {
-      await this.handlers[action](socket, payload);
-    } catch ({ message }) {
-      payload.id && socket.emit(action, { id: payload.id, error: message });
-    }
-  }
-}
+import { SocketResponse, Api, Request } from "@master_kufa/server-tools";
 
 export const vocabularyApi = new Api({
   [ACTIONS.SAVE_WORD]: async (

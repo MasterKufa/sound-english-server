@@ -10,8 +10,10 @@
   "author": "Roman Kaluger",
   "license": "ISC",
   "dependencies": {
+    "@master_kufa/server-tools": "^0.1.21",
     "@prisma/client": "^4.15.0",
     "lodash": "^4.17.21",
+    "nanoid": "^4.0.2",
     "socket.io": "^4.6.2",
     "ts-node": "^10.9.1"
   },
