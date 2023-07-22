@@ -18,9 +18,30 @@ model WordUnit {
 
 model Word {
   id               Int      @id @default(autoincrement())
+  userId           Int
   createdAt        DateTime @default(now())
   sourceWord       WordUnit @relation(fields: [sourceWordUnitId], references: [id], name: "sourceWords")
   targetWord       WordUnit @relation(fields: [targetWordUnitId], references: [id], name: "targetWords")
   sourceWordUnitId Int
   targetWordUnitId Int
+  User             User     @relation(fields: [userId], references: [id])
+}
+
+model User {
+  id Int @unique
+
+  words    Word[]
+  settings Settings @relation(fields: [settingsId], references: [id])
+
+  wordIds    Int[]
+  settingsId Int
+}
+
+model Settings {
+  id                        Int    @id @default(autoincrement())
+  playerQueueSize           Int    @default(5)
+  lastPlayedRemindersSize   Int    @default(3)
+  delayPlayerSourceToTarget Int    @default(1000)
+  delayPlayerWordToWord     Int    @default(2000)
+  User                      User[]
 }

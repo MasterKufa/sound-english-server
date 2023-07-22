@@ -1,20 +1,7 @@
-export type WordReqBody = {
-  sourceWord: WordUnitReqBody;
-  targetWord: WordUnitReqBody;
-  id?: number;
-};
+import { Socket } from "socket.io";
 
-export type WordUnitAudioBody = {
-  id: number;
-};
-
-export type DeleteWordPayload = {
-  id: number;
-};
-
-export type WordUnitReqBody = {
-  lang: Lang;
-  text: string;
+export type SocketAuth = Socket & {
+  handshake: { auth: { decoded: { id: number } } };
 };
 
 export enum Lang {

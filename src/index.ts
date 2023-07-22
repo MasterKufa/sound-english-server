@@ -1,11 +1,16 @@
 import { Socket } from "socket.io";
 import { ACTIONS } from "./actions";
-import { vocabularyApi } from "./vocabulary.api";
+import { vocabularyApi } from "./vocabulary";
 import { createServer } from "@master_kufa/server-tools";
+import { userService } from "./user";
+import { playerApi } from "./player";
 
 const server = createServer({ withAuthorization: true });
 
-server.on("connection", (socket: Socket) => {
+server.on("connection", async (socket: Socket) => {
+  console.log(socket.handshake.auth, socket.handshake.auth.decoded.id);
+  await userService.recordUser(socket.handshake.auth.decoded.id);
+
   socket.on(
     ACTIONS.SAVE_WORD,
     vocabularyApi.handle.bind(vocabularyApi, ACTIONS.SAVE_WORD, socket),
@@ -20,6 +25,6 @@ server.on("connection", (socket: Socket) => {
   );
   socket.on(
     ACTIONS.LOAD_AUDIO,
-    vocabularyApi.handle.bind(vocabularyApi, ACTIONS.LOAD_AUDIO, socket),
+    playerApi.handle.bind(playerApi, ACTIONS.LOAD_AUDIO, socket),
   );
 });

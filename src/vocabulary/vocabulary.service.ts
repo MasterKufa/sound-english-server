@@ -1,35 +1,15 @@
-import { DeleteWordPayload, Lang, WordReqBody, WordUnitReqBody } from "./types";
-import { prisma } from "../prisma";
+import { DeleteWordPayload, WordReqBody } from "./vocabulary.types";
+import { prisma } from "../../prisma";
 import { Word, WordUnit } from "@prisma/client";
-import { existsSync, readFileSync, rm, rmSync, writeFileSync } from "fs";
-import { buildAudioPath } from "./vocabuary.helpers";
+import { playerService } from "../player";
 
 class VocabularyService {
-  async loadAudio(payload: number) {
-    return readFileSync(buildAudioPath(payload));
-  }
-  deleteAudio(id) {
-    const filePath = buildAudioPath(id);
+  async saveWord(payload: WordReqBody, userId: number) {
+    let word: Word & {
+      sourceWord: WordUnit;
+      targetWord: WordUnit;
+    };
 
-    if (existsSync(filePath)) rmSync(filePath);
-  }
-  async generateAudio(payload: WordUnit) {
-    const response = await fetch(
-      `${
-        payload.lang === Lang.ru
-          ? process.env.TTS_RU_HOST
-          : process.env.TTS_EN_HOST
-      }/api/tts?${payload.text}`,
-    );
-
-    this.deleteAudio(payload.id);
-
-    const wavBuffer = await response.arrayBuffer();
-
-    writeFileSync(buildAudioPath(payload.id), Buffer.from(wavBuffer));
-  }
-  async saveWord(payload: WordReqBody) {
-    let word: Word;
     if (payload.id) {
       word = await prisma.word.update({
         where: { id: payload.id },
@@ -46,6 +26,11 @@ class VocabularyService {
     } else {
       word = await prisma.word.create({
         data: {
+          User: {
+            connect: {
+              id: userId,
+            },
+          },
           sourceWord: { create: payload.sourceWord },
           targetWord: { create: payload.targetWord },
         },
@@ -53,8 +38,8 @@ class VocabularyService {
       });
     }
 
-    // await this.generateAudio(word.sourceWord);
-    // await this.generateAudio(word.targetWord);
+    await playerService.generateUnitsAudio(word.sourceWord);
+    await playerService.generateUnitsAudio(word.targetWord);
 
     return word;
   }
@@ -69,14 +54,16 @@ class VocabularyService {
       where: { id: { in: [word.sourceWord.id, word.targetWord.id] } },
     });
 
-    // this.deleteAudio(id);
+    playerService.deleteAudio(id);
 
     return word.id;
   }
 
-  // toDO user auth words
-  async loadWords() {
+  async loadWords(userId: number) {
     return await prisma.word.findMany({
+      where: {
+        userId,
+      },
       orderBy: { createdAt: "desc" },
       include: { sourceWord: true, targetWord: true },
     });
