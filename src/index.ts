@@ -7,10 +7,13 @@ import { playerApi } from "./player";
 
 const server = createServer({ withAuthorization: true });
 
-server.on("connection", async (socket: Socket) => {
-  console.log(socket.handshake.auth, socket.handshake.auth.decoded.id);
+server.use(async (socket, next) => {
   await userService.recordUser(socket.handshake.auth.decoded.id);
 
+  next();
+});
+
+server.on("connection", async (socket: Socket) => {
   socket.on(
     ACTIONS.SAVE_WORD,
     vocabularyApi.handle.bind(vocabularyApi, ACTIONS.SAVE_WORD, socket),
