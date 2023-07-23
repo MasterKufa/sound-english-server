@@ -5,6 +5,7 @@ import { Lang } from "../types";
 import { Socket, io } from "socket.io-client";
 import { FFMPEG_ACTIONS } from "./player.types";
 import { prisma } from "../../prisma";
+import { emitWithAnswer } from "@master_kufa/server-tools";
 
 class PlayerService {
   ffmpegSocket: Socket;
@@ -13,15 +14,15 @@ class PlayerService {
       transports: ["websocket"],
     });
   }
-  async loadAudio(id: number) {
+  async loadAudio(id: number, userId: number) {
     const word = await prisma.word.findUnique({ where: { id } });
     const { settings } = await prisma.user.findUnique({
-      where: { id },
+      where: { id: userId },
       include: { settings: true },
     });
     const wordAudioPath = buildAudioWordPath(id);
 
-    await this.ffmpegSocket.emitWithAck(FFMPEG_ACTIONS.CONCAT_WITH_PAUSE, {
+    await emitWithAnswer(this.ffmpegSocket, FFMPEG_ACTIONS.CONCAT_WITH_PAUSE, {
       inputSource1: buildAudioUnitPath(word.sourceWordUnitId),
       inputSource2: buildAudioUnitPath(word.targetWordUnitId),
       pauseMs: settings.delayPlayerSourceToTarget,
