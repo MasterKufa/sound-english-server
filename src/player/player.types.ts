@@ -8,7 +8,11 @@ export enum FFMPEG_ACTIONS {
 
 export type ConcatConfig = {
   inputSource1: string;
+  inputSource1Times: number;
   inputSource2: string;
+  inputSource2Times: number;
+  repeatSourceDelay: number;
+  repeatTargetDelay: number;
   pauseMs: number;
   outputPath: string;
 };

@@ -38,9 +38,6 @@ class VocabularyService {
       });
     }
 
-    await playerService.generateUnitsAudio(word.sourceWord);
-    await playerService.generateUnitsAudio(word.targetWord);
-
     return word;
   }
 

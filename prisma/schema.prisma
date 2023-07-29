@@ -17,14 +17,15 @@ model WordUnit {
 }
 
 model Word {
-  id               Int      @id @default(autoincrement())
-  userId           Int
-  createdAt        DateTime @default(now())
-  sourceWord       WordUnit @relation(fields: [sourceWordUnitId], references: [id], name: "sourceWords")
-  targetWord       WordUnit @relation(fields: [targetWordUnitId], references: [id], name: "targetWords")
-  sourceWordUnitId Int
-  targetWordUnitId Int
-  User             User     @relation(fields: [userId], references: [id])
+  id                 Int      @id @default(autoincrement())
+  userId             Int
+  createdAt          DateTime @default(now())
+  sourceWord         WordUnit @relation(fields: [sourceWordUnitId], references: [id], name: "sourceWords")
+  targetWord         WordUnit @relation(fields: [targetWordUnitId], references: [id], name: "targetWords")
+  sourceWordUnitId   Int
+  targetWordUnitId   Int
+  generatedSoundHash String   @default("")
+  User               User     @relation(fields: [userId], references: [id])
 }
 
 model User {
@@ -43,5 +44,13 @@ model Settings {
   lastPlayedRemindersSize   Int    @default(3)
   delayPlayerSourceToTarget Int    @default(1000)
   delayPlayerWordToWord     Int    @default(2000)
+  sourceVoice               String @default("larynx:northern_english_male-glow_tts")
+  targetVoice               String @default("glow-speak:ru_nikolaev")
+  repeatSourceCount         Int    @default(1)
+  repeatTargetCount         Int    @default(1)
+  repeatWordCount           Int    @default(1)
+  repeatSourceDelay         Int    @default(0)
+  repeatTargetDelay         Int    @default(0)
+  queueStrategy             String @default("sequence")
   User                      User[]
 }

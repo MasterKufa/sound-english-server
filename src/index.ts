@@ -4,6 +4,7 @@ import { vocabularyApi } from "./vocabulary";
 import { createServer } from "@master_kufa/server-tools";
 import { userService } from "./user";
 import { playerApi } from "./player";
+import { settingsApi } from "./settings";
 
 const server = createServer({ withAuthorization: true });
 
@@ -29,5 +30,13 @@ server.on("connection", async (socket: Socket) => {
   socket.on(
     ACTIONS.LOAD_AUDIO,
     playerApi.handle.bind(playerApi, ACTIONS.LOAD_AUDIO, socket),
+  );
+  socket.on(
+    ACTIONS.CHANGE_SETTINGS,
+    settingsApi.handle.bind(settingsApi, ACTIONS.CHANGE_SETTINGS, socket),
+  );
+  socket.on(
+    ACTIONS.LOAD_VOICES,
+    settingsApi.handle.bind(settingsApi, ACTIONS.LOAD_VOICES, socket),
   );
 });
