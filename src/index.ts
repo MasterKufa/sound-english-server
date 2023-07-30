@@ -32,6 +32,10 @@ server.on("connection", async (socket: Socket) => {
     playerApi.handle.bind(playerApi, ACTIONS.LOAD_AUDIO, socket),
   );
   socket.on(
+    ACTIONS.LOAD_SETTINGS,
+    settingsApi.handle.bind(settingsApi, ACTIONS.LOAD_SETTINGS, socket),
+  );
+  socket.on(
     ACTIONS.CHANGE_SETTINGS,
     settingsApi.handle.bind(settingsApi, ACTIONS.CHANGE_SETTINGS, socket),
   );
