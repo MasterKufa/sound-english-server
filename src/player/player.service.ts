@@ -32,8 +32,11 @@ class PlayerService {
       .update(JSON.stringify(settings))
       .digest("hex");
 
-    if (generatedSoundHash === word.generatedSoundHash) {
-      return readFileSync(wordAudioPath);
+    if (
+      generatedSoundHash === word.generatedSoundHash &&
+      existsSync(wordAudioPath)
+    ) {
+      return await readFileSync(wordAudioPath);
     }
 
     await this.generateUnitsAudio(word.sourceWord, userId);
