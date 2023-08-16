@@ -1,7 +1,12 @@
 import { vocabularyService } from "./vocabulary.service";
 import { ACTIONS } from "../actions";
 import { Socket } from "socket.io";
-import { WordReqBody, DeleteWordPayload } from "./vocabulary.types";
+import {
+  WordReqBody,
+  DeleteWordPayload,
+  WordUnitReqBody,
+  WordTranslateResponse,
+} from "./vocabulary.types";
 import { Word } from "@prisma/client";
 import { SocketResponse, Api, Request } from "@master_kufa/server-tools";
 import { SocketAuth } from "../types";
@@ -21,6 +26,19 @@ export const vocabularyApi = new Api({
     };
 
     socket.emit(ACTIONS.SAVE_WORD, successResponse);
+  },
+  [ACTIONS.TRANSLATE_WORD]: async (
+    socket: SocketAuth,
+    payload: Request<WordUnitReqBody>,
+  ) => {
+    const translation = await vocabularyService.translateWord(payload);
+
+    const successResponse: SocketResponse<WordTranslateResponse> = {
+      requestId: payload.requestId,
+      payload: translation,
+    };
+
+    socket.emit(ACTIONS.TRANSLATE_WORD, successResponse);
   },
   [ACTIONS.DELETE_WORD]: async (
     socket: Socket,

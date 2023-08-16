@@ -12,6 +12,7 @@
   "dependencies": {
     "@master_kufa/server-tools": "^0.1.26",
     "@prisma/client": "^4.15.0",
+    "@vitalets/google-translate-api": "^9.2.0",
     "lodash": "^4.17.21",
     "nanoid": "^4.0.2",
     "socket.io": "^4.6.2",

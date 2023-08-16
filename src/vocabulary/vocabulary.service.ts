@@ -1,9 +1,23 @@
-import { DeleteWordPayload, WordReqBody } from "./vocabulary.types";
+import {
+  DeleteWordPayload,
+  WordReqBody,
+  WordTranslateResponse,
+  WordUnitReqBody,
+} from "./vocabulary.types";
 import { prisma } from "../../prisma";
 import { Word, WordUnit } from "@prisma/client";
 import { playerService } from "../player";
+import { translate } from "@vitalets/google-translate-api";
+import { pick } from "lodash";
 
 class VocabularyService {
+  async translateWord(payload: WordUnitReqBody) {
+    const tranlation = await translate(payload.text, {
+      to: "ru",
+    });
+
+    return pick(tranlation, "text");
+  }
   async saveWord(payload: WordReqBody, userId: number) {
     let word: Word & {
       sourceWord: WordUnit;

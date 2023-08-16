@@ -15,6 +15,10 @@ export type WordUnitReqBody = {
   text: string;
 };
 
+export type WordTranslateResponse = {
+  text: string;
+};
+
 export type ConcatAudiosPayload = {
   inputSource1: string;
   inputSource2: string;

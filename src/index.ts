@@ -20,6 +20,10 @@ server.on("connection", async (socket: Socket) => {
     vocabularyApi.handle.bind(vocabularyApi, ACTIONS.SAVE_WORD, socket),
   );
   socket.on(
+    ACTIONS.TRANSLATE_WORD,
+    vocabularyApi.handle.bind(vocabularyApi, ACTIONS.TRANSLATE_WORD, socket),
+  );
+  socket.on(
     ACTIONS.DELETE_WORD,
     vocabularyApi.handle.bind(vocabularyApi, ACTIONS.DELETE_WORD, socket),
   );
