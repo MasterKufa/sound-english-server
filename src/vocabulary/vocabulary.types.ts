@@ -6,7 +6,7 @@ export type WordReqBody = {
   id?: number;
 };
 
-export type DeleteWordPayload = {
+export type IdPayload = {
   id: number;
 };
 
@@ -24,4 +24,17 @@ export type ConcatAudiosPayload = {
   inputSource2: string;
   pauseMs: number;
   outputPath: string;
+};
+
+export type CustomAudioPayload = {
+  buffer: Buffer;
+  mimeType: string;
+  isModified?: boolean;
+};
+
+export type CustomAudios = Partial<Record<Lang, CustomAudioPayload>>;
+
+export type CustomAudiosPayload = {
+  wordId: number;
+  customAudios: CustomAudios;
 };

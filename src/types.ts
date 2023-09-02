@@ -8,3 +8,5 @@ export enum Lang {
   en = "en",
   ru = "ru",
 }
+
+export type BufferedAudio = { buffer: Buffer; type: string };

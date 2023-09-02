@@ -39,18 +39,19 @@ model User {
 }
 
 model Settings {
-  id                        Int    @id @default(autoincrement())
-  playerQueueSize           Int    @default(5)
-  lastPlayedRemindersSize   Int    @default(3)
-  delayPlayerSourceToTarget Int    @default(1000)
-  delayPlayerWordToWord     Int    @default(2000)
-  sourceVoice               String @default("larynx:northern_english_male-glow_tts")
-  targetVoice               String @default("glow-speak:ru_nikolaev")
-  repeatSourceCount         Int    @default(1)
-  repeatTargetCount         Int    @default(1)
-  repeatWordCount           Int    @default(1)
-  repeatSourceDelay         Int    @default(0)
-  repeatTargetDelay         Int    @default(0)
-  queueStrategy             String @default("sequence")
+  id                        Int     @id @default(autoincrement())
+  isCustomAudioPreferable   Boolean @default(true)
+  playerQueueSize           Int     @default(5)
+  lastPlayedRemindersSize   Int     @default(3)
+  delayPlayerSourceToTarget Int     @default(1000)
+  delayPlayerWordToWord     Int     @default(2000)
+  sourceVoice               String  @default("larynx:northern_english_male-glow_tts")
+  targetVoice               String  @default("glow-speak:ru_nikolaev")
+  repeatSourceCount         Int     @default(1)
+  repeatTargetCount         Int     @default(1)
+  repeatWordCount           Int     @default(1)
+  repeatSourceDelay         Int     @default(0)
+  repeatTargetDelay         Int     @default(0)
+  queueStrategy             String  @default("sequence")
   User                      User[]
 }

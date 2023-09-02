@@ -3,9 +3,11 @@ import { ACTIONS } from "../actions";
 import { Socket } from "socket.io";
 import {
   WordReqBody,
-  DeleteWordPayload,
   WordUnitReqBody,
   WordTranslateResponse,
+  IdPayload,
+  CustomAudios,
+  CustomAudiosPayload,
 } from "./vocabulary.types";
 import { Word } from "@prisma/client";
 import { SocketResponse, Api, Request } from "@master_kufa/server-tools";
@@ -42,7 +44,7 @@ export const vocabularyApi = new Api({
   },
   [ACTIONS.DELETE_WORD]: async (
     socket: Socket,
-    payload: Request<DeleteWordPayload>,
+    payload: Request<IdPayload>,
   ) => {
     const deletedId = await vocabularyService.deleteWord(payload);
     const successResponse: SocketResponse<number> = {
@@ -62,5 +64,29 @@ export const vocabularyApi = new Api({
     };
 
     socket.emit(ACTIONS.LOAD_WORDS, successResponse);
+  },
+  [ACTIONS.LOAD_CUSTOM_AUDIOS]: async (
+    socket: SocketAuth,
+    payload: Request<IdPayload>,
+  ) => {
+    const customAudios = await vocabularyService.loadCustomAudios(payload);
+    const successResponse: SocketResponse<CustomAudios> = {
+      requestId: payload.requestId,
+      payload: customAudios,
+    };
+
+    socket.emit(ACTIONS.LOAD_CUSTOM_AUDIOS, successResponse);
+  },
+  [ACTIONS.SAVE_CUSTOM_AUDIOS]: async (
+    socket: SocketAuth,
+    payload: Request<CustomAudiosPayload>,
+  ) => {
+    await vocabularyService.saveCustomAudios(payload);
+    const successResponse: SocketResponse<number> = {
+      requestId: payload.requestId,
+      payload: payload.wordId,
+    };
+
+    socket.emit(ACTIONS.SAVE_CUSTOM_AUDIOS, successResponse);
   },
 });

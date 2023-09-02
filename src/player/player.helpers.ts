@@ -1,13 +1,5 @@
 import { resolve } from "path";
-import { mkdirSync, existsSync } from "fs";
-
-const createNotExistedPath = (targetPath: string) => {
-  if (!existsSync(targetPath)) {
-    mkdirSync(targetPath);
-  }
-
-  return targetPath;
-};
+import { createNotExistedPath } from "../helpers";
 
 export const buildAudioUnitPath = (id: number) =>
   resolve(createNotExistedPath("audios/units"), `${id}.wav`);

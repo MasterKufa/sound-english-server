@@ -31,6 +31,7 @@ class SettingsService {
         "repeatSourceDelay",
         "repeatTargetDelay",
         "queueStrategy",
+        "isCustomAudioPreferable",
       ]),
     });
 

@@ -4,7 +4,14 @@ export type WordUnitAudioBody = {
 
 export enum FFMPEG_ACTIONS {
   CONCAT_WITH_PAUSE = "CONCAT_WITH_PAUSE",
+  CONVERT_MONO_16 = "CONVERT_MONO_16",
 }
+
+export type CovertConfig = {
+  input: string;
+  output: string;
+  id: string;
+};
 
 export type ConcatConfig = {
   inputSource1: string;

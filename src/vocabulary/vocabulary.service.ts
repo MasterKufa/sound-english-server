@@ -1,7 +1,9 @@
 import {
-  DeleteWordPayload,
+  CustomAudioPayload,
+  CustomAudios,
+  CustomAudiosPayload,
+  IdPayload,
   WordReqBody,
-  WordTranslateResponse,
   WordUnitReqBody,
 } from "./vocabulary.types";
 import { prisma } from "../../prisma";
@@ -9,14 +11,24 @@ import { Word, WordUnit } from "@prisma/client";
 import { playerService } from "../player";
 import { translate } from "@vitalets/google-translate-api";
 import { pick } from "lodash";
+import { emitWithAnswer } from "@master_kufa/server-tools";
+import { writeFile, rm, existsSync, readFileSync } from "fs";
+import { nanoid } from "nanoid";
+import { CovertConfig, FFMPEG_ACTIONS } from "../player/player.types";
+import { promisify } from "util";
+import { ffmpegSocket } from "../client-sockets";
+import {
+  buildCustomAudioPath,
+  buildCustomAudioTempPath,
+} from "./vocabulary.helpers";
 
 class VocabularyService {
   async translateWord(payload: WordUnitReqBody) {
-    const tranlation = await translate(payload.text, {
+    const translation = await translate(payload.text, {
       to: "ru",
     });
 
-    return pick(tranlation, "text");
+    return pick(translation, "text");
   }
   async saveWord(payload: WordReqBody, userId: number) {
     let word: Word & {
@@ -29,10 +41,10 @@ class VocabularyService {
         where: { id: payload.id },
         data: {
           sourceWord: {
-            update: payload.sourceWord,
+            update: pick(payload.sourceWord, ["text", "lang"]),
           },
           targetWord: {
-            update: payload.targetWord,
+            update: pick(payload.targetWord, ["text", "lang"]),
           },
         },
         include: { sourceWord: true, targetWord: true },
@@ -45,8 +57,8 @@ class VocabularyService {
               id: userId,
             },
           },
-          sourceWord: { create: payload.sourceWord },
-          targetWord: { create: payload.targetWord },
+          sourceWord: { create: pick(payload.sourceWord, ["text", "lang"]) },
+          targetWord: { create: pick(payload.targetWord, ["text", "lang"]) },
         },
         include: { sourceWord: true, targetWord: true },
       });
@@ -55,7 +67,7 @@ class VocabularyService {
     return word;
   }
 
-  async deleteWord({ id }: DeleteWordPayload) {
+  async deleteWord({ id }: IdPayload) {
     const word = await prisma.word.delete({
       where: { id },
       include: { sourceWord: true, targetWord: true },
@@ -78,6 +90,71 @@ class VocabularyService {
       orderBy: { createdAt: "desc" },
       include: { sourceWord: true, targetWord: true },
     });
+  }
+
+  async loadCustomAudios({ id }: IdPayload) {
+    const word = await prisma.word.findUnique({
+      where: { id },
+      include: { sourceWord: true, targetWord: true },
+    });
+
+    const customAudios: CustomAudios = {};
+    const targetPath = buildCustomAudioPath(word.targetWord.id);
+    const sourcePath = buildCustomAudioPath(word.sourceWord.id);
+
+    if (existsSync(targetPath)) {
+      customAudios.ru = {
+        buffer: readFileSync(targetPath),
+        mimeType: "audio/wav",
+      };
+    }
+
+    if (existsSync(sourcePath)) {
+      customAudios.en = {
+        buffer: readFileSync(sourcePath),
+        mimeType: "audio/wav",
+      };
+    }
+
+    return customAudios;
+  }
+  async createCustomAudio(unitId: number, customAudio: CustomAudioPayload) {
+    const tempFilePath = buildCustomAudioTempPath(unitId, customAudio.mimeType);
+
+    await promisify(writeFile)(tempFilePath, customAudio.buffer);
+
+    await emitWithAnswer<CovertConfig, unknown>(
+      ffmpegSocket,
+      FFMPEG_ACTIONS.CONVERT_MONO_16,
+      {
+        input: tempFilePath,
+        output: buildCustomAudioPath(unitId),
+        id: nanoid(),
+      },
+    );
+
+    await promisify(rm)(tempFilePath);
+  }
+  async saveCustomAudios(payload: CustomAudiosPayload) {
+    const word = await prisma.word.findUnique({
+      where: { id: payload.wordId },
+      include: { sourceWord: true, targetWord: true },
+    });
+
+    if (payload.customAudios.en && payload.customAudios.en.isModified)
+      this.createCustomAudio(word.sourceWord.id, payload.customAudios.en);
+
+    if (payload.customAudios.ru && payload.customAudios.ru.isModified)
+      this.createCustomAudio(word.targetWord.id, payload.customAudios.ru);
+
+    const sourceAudioPath = buildCustomAudioPath(word.sourceWord.id);
+    const targetAudioPath = buildCustomAudioPath(word.targetWord.id);
+
+    if (!payload.customAudios.en && existsSync(sourceAudioPath))
+      await promisify(rm)(sourceAudioPath);
+
+    if (!payload.customAudios.ru && existsSync(targetAudioPath))
+      await promisify(rm)(targetAudioPath);
   }
 }
 
