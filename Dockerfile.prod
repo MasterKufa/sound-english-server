@@ -2,5 +2,6 @@ FROM node:18.16.0-alpine
 WORKDIR /app
 COPY . /app
 RUN npm ci
+RUN npx prisma migrate deploy
 CMD npm run watch:serve
 EXPOSE 3000
