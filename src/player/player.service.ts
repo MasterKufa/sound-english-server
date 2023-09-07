@@ -52,7 +52,7 @@ class PlayerService {
     const wordAudioPath = buildAudioWordPath(id);
 
     const generatedSoundHash = createHash("sha256")
-      .update(JSON.stringify({ settings, ...word }))
+      .update(JSON.stringify({ ...settings, ...word }))
       .digest("hex");
 
     if (
