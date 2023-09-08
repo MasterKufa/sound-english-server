@@ -58,7 +58,7 @@ export const vocabularyApi = new Api({
     const words = await vocabularyService.loadWords(
       socket.handshake.auth.decoded.id,
     );
-    const successResponse: SocketResponse<Array<Word>> = {
+    const successResponse: SocketResponse<Array<Partial<Word>>> = {
       requestId: payload.requestId,
       payload: words,
     };

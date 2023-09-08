@@ -88,7 +88,7 @@ class VocabularyService {
         userId,
       },
       orderBy: { createdAt: "desc" },
-      include: { sourceWord: true, targetWord: true },
+      select: { createdAt: true, sourceWord: true, targetWord: true, id: true },
     });
   }
 
