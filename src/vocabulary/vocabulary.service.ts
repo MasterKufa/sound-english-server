@@ -77,7 +77,7 @@ class VocabularyService {
       where: { id: { in: [word.sourceWord.id, word.targetWord.id] } },
     });
 
-    playerService.deleteAudio(id);
+    playerService.deleteAudioUnit(id);
 
     return word.id;
   }

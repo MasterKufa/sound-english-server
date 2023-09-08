@@ -89,15 +89,17 @@ class PlayerService {
 
     return readFileSync(wordAudioPath);
   }
-  deleteAudio(id: number) {
+  deleteAudioUnit(id: number) {
     const filePath = buildAudioUnitPath(id);
+    const fileCustomPath = buildCustomAudioPath(id);
 
     if (existsSync(filePath)) rmSync(filePath);
+    if (existsSync(fileCustomPath)) rmSync(fileCustomPath);
   }
   async generateUnitsAudio(payload: WordUnit, userId: number) {
     if (!payload.text) return;
 
-    this.deleteAudio(payload.id);
+    this.deleteAudioUnit(payload.id);
 
     const { settings } = await prisma.user.findFirst({
       where: { id: userId },
