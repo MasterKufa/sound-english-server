@@ -32,20 +32,8 @@ server.on("connection", async (socket: Socket) => {
     vocabularyApi.handle.bind(vocabularyApi, ACTIONS.LOAD_WORDS, socket),
   );
   socket.on(
-    ACTIONS.LOAD_CUSTOM_AUDIOS,
-    vocabularyApi.handle.bind(
-      vocabularyApi,
-      ACTIONS.LOAD_CUSTOM_AUDIOS,
-      socket,
-    ),
-  );
-  socket.on(
-    ACTIONS.SAVE_CUSTOM_AUDIOS,
-    vocabularyApi.handle.bind(
-      vocabularyApi,
-      ACTIONS.SAVE_CUSTOM_AUDIOS,
-      socket,
-    ),
+    ACTIONS.LOAD_WORD,
+    vocabularyApi.handle.bind(vocabularyApi, ACTIONS.LOAD_WORD, socket),
   );
   socket.on(
     ACTIONS.LOAD_AUDIO,

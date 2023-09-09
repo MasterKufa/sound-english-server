@@ -1,8 +1,8 @@
 import {
   CustomAudioPayload,
   CustomAudios,
-  CustomAudiosPayload,
   IdPayload,
+  WordComplex,
   WordReqBody,
   WordUnitReqBody,
 } from "./vocabulary.types";
@@ -64,6 +64,8 @@ class VocabularyService {
       });
     }
 
+    this.saveCustomAudios(payload.customAudios, word.id);
+
     return word;
   }
 
@@ -91,8 +93,18 @@ class VocabularyService {
       select: { createdAt: true, sourceWord: true, targetWord: true, id: true },
     });
   }
+  async loadWord({ id }: IdPayload): Promise<Partial<WordComplex>> {
+    const word = await prisma.word.findFirst({
+      where: { id },
+      select: { createdAt: true, sourceWord: true, targetWord: true, id: true },
+    });
 
-  async loadCustomAudios({ id }: IdPayload) {
+    const customAudios = await this.buildCustomAudios(id);
+
+    return { ...word, customAudios };
+  }
+
+  async buildCustomAudios(id: number): Promise<CustomAudios> {
     const word = await prisma.word.findUnique({
       where: { id },
       include: { sourceWord: true, targetWord: true },
@@ -135,25 +147,25 @@ class VocabularyService {
 
     await promisify(rm)(tempFilePath);
   }
-  async saveCustomAudios(payload: CustomAudiosPayload) {
+  async saveCustomAudios(customAudios: CustomAudios, wordId: number) {
     const word = await prisma.word.findUnique({
-      where: { id: payload.wordId },
+      where: { id: wordId },
       include: { sourceWord: true, targetWord: true },
     });
 
-    if (payload.customAudios.en && payload.customAudios.en.isModified)
-      this.createCustomAudio(word.sourceWord.id, payload.customAudios.en);
+    if (customAudios.en && customAudios.en.isModified)
+      this.createCustomAudio(word.sourceWord.id, customAudios.en);
 
-    if (payload.customAudios.ru && payload.customAudios.ru.isModified)
-      this.createCustomAudio(word.targetWord.id, payload.customAudios.ru);
+    if (customAudios.ru && customAudios.ru.isModified)
+      this.createCustomAudio(word.targetWord.id, customAudios.ru);
 
     const sourceAudioPath = buildCustomAudioPath(word.sourceWord.id);
     const targetAudioPath = buildCustomAudioPath(word.targetWord.id);
 
-    if (!payload.customAudios.en && existsSync(sourceAudioPath))
+    if (!customAudios.en && existsSync(sourceAudioPath))
       await promisify(rm)(sourceAudioPath);
 
-    if (!payload.customAudios.ru && existsSync(targetAudioPath))
+    if (!customAudios.ru && existsSync(targetAudioPath))
       await promisify(rm)(targetAudioPath);
   }
 }

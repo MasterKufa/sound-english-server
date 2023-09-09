@@ -1,8 +1,10 @@
+import { Word } from "@prisma/client";
 import { Lang } from "../types";
 
 export type WordReqBody = {
   sourceWord: WordUnitReqBody;
   targetWord: WordUnitReqBody;
+  customAudios: CustomAudios;
   id?: number;
 };
 
@@ -34,7 +36,4 @@ export type CustomAudioPayload = {
 
 export type CustomAudios = Partial<Record<Lang, CustomAudioPayload>>;
 
-export type CustomAudiosPayload = {
-  wordId: number;
-  customAudios: CustomAudios;
-};
+export type WordComplex = Word & { customAudios: CustomAudios };

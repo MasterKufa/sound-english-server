@@ -6,8 +6,7 @@ import {
   WordUnitReqBody,
   WordTranslateResponse,
   IdPayload,
-  CustomAudios,
-  CustomAudiosPayload,
+  WordComplex,
 } from "./vocabulary.types";
 import { Word } from "@prisma/client";
 import { SocketResponse, Api, Request } from "@master_kufa/server-tools";
@@ -65,28 +64,16 @@ export const vocabularyApi = new Api({
 
     socket.emit(ACTIONS.LOAD_WORDS, successResponse);
   },
-  [ACTIONS.LOAD_CUSTOM_AUDIOS]: async (
+  [ACTIONS.LOAD_WORD]: async (
     socket: SocketAuth,
     payload: Request<IdPayload>,
   ) => {
-    const customAudios = await vocabularyService.loadCustomAudios(payload);
-    const successResponse: SocketResponse<CustomAudios> = {
+    const wordComplex = await vocabularyService.loadWord(payload);
+    const successResponse: SocketResponse<Partial<WordComplex>> = {
       requestId: payload.requestId,
-      payload: customAudios,
+      payload: wordComplex,
     };
 
-    socket.emit(ACTIONS.LOAD_CUSTOM_AUDIOS, successResponse);
-  },
-  [ACTIONS.SAVE_CUSTOM_AUDIOS]: async (
-    socket: SocketAuth,
-    payload: Request<CustomAudiosPayload>,
-  ) => {
-    await vocabularyService.saveCustomAudios(payload);
-    const successResponse: SocketResponse<number> = {
-      requestId: payload.requestId,
-      payload: payload.wordId,
-    };
-
-    socket.emit(ACTIONS.SAVE_CUSTOM_AUDIOS, successResponse);
+    socket.emit(ACTIONS.LOAD_WORD, successResponse);
   },
 });
