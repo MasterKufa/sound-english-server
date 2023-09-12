@@ -1,1 +1,2 @@
-export { settingsApi } from "./settings.api";
+export { settingsApi, settingsApiHandlers } from "./settings.api";
+export { settingsService } from "./settings.service";

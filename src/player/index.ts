@@ -1,2 +1,2 @@
-export { playerApi } from "./player.api";
+export { playerApi, playerApiHandlers } from "./player.api";
 export { playerService } from "./player.service";
