@@ -7,6 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// generatedAudioHash change after add important prop
 model WordUnit {
   id   Int    @id @default(autoincrement())
   lang String
@@ -16,6 +17,7 @@ model WordUnit {
   targetWords Word[] @relation(name: "targetWords")
 }
 
+// generatedAudioHash change after add important prop
 model Word {
   id                 Int      @id @default(autoincrement())
   userId             Int
@@ -38,6 +40,7 @@ model User {
   settingsId Int
 }
 
+// generatedAudioHash change after add important setting
 model Settings {
   id                        Int     @id @default(autoincrement())
   isCustomAudioPreferable   Boolean @default(true)

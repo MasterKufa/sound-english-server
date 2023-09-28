@@ -4,7 +4,7 @@ export type WordUnitAudioBody = {
 
 export enum FFMPEG_ACTIONS {
   CONCAT_WITH_PAUSE = "CONCAT_WITH_PAUSE",
-  CONVERT_MONO_16 = "CONVERT_MONO_16",
+  CONVERT_MP3 = "CONVERT_MP3",
 }
 
 export type CovertConfig = {

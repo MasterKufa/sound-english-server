@@ -1,10 +1,10 @@
-import { Word } from "@prisma/client";
-import { Lang } from "../types";
+import { CustomAudios, Lang } from "../types";
 
 export type WordReqBody = {
   sourceWord: WordUnitReqBody;
   targetWord: WordUnitReqBody;
   customAudios: CustomAudios;
+  generatedSoundHash: string;
   id?: number;
 };
 
@@ -27,13 +27,3 @@ export type ConcatAudiosPayload = {
   pauseMs: number;
   outputPath: string;
 };
-
-export type CustomAudioPayload = {
-  buffer: Buffer;
-  mimeType: string;
-  isModified?: boolean;
-};
-
-export type CustomAudios = Partial<Record<Lang, CustomAudioPayload>>;
-
-export type WordComplex = Word & { customAudios: CustomAudios };

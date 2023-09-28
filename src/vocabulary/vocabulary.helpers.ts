@@ -1,12 +1,26 @@
-import { extension } from "mime-types";
-import { createNotExistedPath } from "../helpers";
-import { resolve } from "path";
+import { createHash } from "crypto";
+import { pick } from "lodash";
+import { Settings } from "@prisma/client";
+import { WordReqBody } from "./vocabulary.types";
 
-export const buildCustomAudioTempPath = (id: number, type: string) =>
-  resolve(
-    createNotExistedPath("audios/temp/units"),
-    `${id}.${extension(type)}`,
-  );
-
-export const buildCustomAudioPath = (id: number) =>
-  resolve(createNotExistedPath("audios/units"), `${id}.custom.wav`);
+export const generateSoundHash = (settings: Settings, word: WordReqBody) =>
+  createHash("sha256")
+    .update(
+      JSON.stringify({
+        ...pick(
+          settings,
+          "isCustomAudioPreferable",
+          "delayPlayerSourceToTarget",
+          "delayPlayerWordToWord",
+          "sourceVoice",
+          "targetVoice",
+          "repeatSourceCount",
+          "repeatTargetCount",
+          "repeatSourceDelay",
+          "repeatTargetDelay",
+        ),
+        ...pick(word.sourceWord, "lang", "text"),
+        ...pick(word.targetWord, "lang", "text"),
+      }),
+    )
+    .digest("hex");

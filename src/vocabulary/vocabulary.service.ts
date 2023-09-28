@@ -1,28 +1,20 @@
-import {
-  CustomAudioPayload,
-  CustomAudios,
-  IdPayload,
-  WordComplex,
-  WordReqBody,
-  WordUnitReqBody,
-} from "./vocabulary.types";
+import { IdPayload, WordReqBody, WordUnitReqBody } from "./vocabulary.types";
 import { prisma } from "../../prisma";
-import { Word, WordUnit } from "@prisma/client";
 import { playerService } from "../player";
 import { translate } from "@vitalets/google-translate-api";
 import { pick } from "lodash";
-import { emitWithAnswer } from "@master_kufa/server-tools";
-import { writeFile, rm, existsSync, readFileSync } from "fs";
-import { nanoid } from "nanoid";
-import { CovertConfig, FFMPEG_ACTIONS } from "../player/player.types";
-import { promisify } from "util";
-import { ffmpegSocket } from "../client-sockets";
-import {
-  buildCustomAudioPath,
-  buildCustomAudioTempPath,
-} from "./vocabulary.helpers";
+import { generateSoundHash } from "./vocabulary.helpers";
+import { settingsSelectors } from "../settings";
+import { WordComplex } from "../types";
 
 class VocabularyService {
+  private wordSelector = {
+    createdAt: true,
+    sourceWord: { select: { id: true, lang: true, text: true } },
+    targetWord: { select: { id: true, lang: true, text: true } },
+    id: true,
+    generatedSoundHash: true,
+  };
   async translateWord(payload: WordUnitReqBody) {
     const translation = await translate(payload.text, {
       to: "ru",
@@ -30,16 +22,19 @@ class VocabularyService {
 
     return pick(translation, "text");
   }
+
   async saveWord(payload: WordReqBody, userId: number) {
-    let word: Word & {
-      sourceWord: WordUnit;
-      targetWord: WordUnit;
-    };
+    let word: Partial<WordComplex>;
+
+    const settings = await settingsSelectors.userSettings(userId);
+
+    const generatedSoundHash = generateSoundHash(settings, payload);
 
     if (payload.id) {
       word = await prisma.word.update({
         where: { id: payload.id },
         data: {
+          generatedSoundHash,
           sourceWord: {
             update: pick(payload.sourceWord, ["text", "lang"]),
           },
@@ -47,11 +42,12 @@ class VocabularyService {
             update: pick(payload.targetWord, ["text", "lang"]),
           },
         },
-        include: { sourceWord: true, targetWord: true },
+        select: this.wordSelector,
       });
     } else {
       word = await prisma.word.create({
         data: {
+          generatedSoundHash,
           User: {
             connect: {
               id: userId,
@@ -60,11 +56,15 @@ class VocabularyService {
           sourceWord: { create: pick(payload.sourceWord, ["text", "lang"]) },
           targetWord: { create: pick(payload.targetWord, ["text", "lang"]) },
         },
-        include: { sourceWord: true, targetWord: true },
+        select: this.wordSelector,
       });
     }
 
-    this.saveCustomAudios(payload.customAudios, word.id);
+    if (generatedSoundHash !== payload.generatedSoundHash) {
+      await playerService.generateAudio(word as WordComplex, userId);
+    }
+
+    playerService.saveCustomAudios(payload.customAudios, word.id);
 
     return word;
   }
@@ -90,83 +90,18 @@ class VocabularyService {
         userId,
       },
       orderBy: { createdAt: "desc" },
-      select: { createdAt: true, sourceWord: true, targetWord: true, id: true },
+      select: this.wordSelector,
     });
   }
   async loadWord({ id }: IdPayload): Promise<Partial<WordComplex>> {
     const word = await prisma.word.findFirst({
       where: { id },
-      select: { createdAt: true, sourceWord: true, targetWord: true, id: true },
+      select: this.wordSelector,
     });
 
-    const customAudios = await this.buildCustomAudios(id);
+    const customAudios = await playerService.buildCustomAudios(id);
 
     return { ...word, customAudios };
-  }
-
-  async buildCustomAudios(id: number): Promise<CustomAudios> {
-    const word = await prisma.word.findUnique({
-      where: { id },
-      include: { sourceWord: true, targetWord: true },
-    });
-
-    const customAudios: CustomAudios = {};
-    const targetPath = buildCustomAudioPath(word.targetWord.id);
-    const sourcePath = buildCustomAudioPath(word.sourceWord.id);
-
-    if (existsSync(targetPath)) {
-      customAudios.ru = {
-        buffer: readFileSync(targetPath),
-        mimeType: "audio/wav",
-      };
-    }
-
-    if (existsSync(sourcePath)) {
-      customAudios.en = {
-        buffer: readFileSync(sourcePath),
-        mimeType: "audio/wav",
-      };
-    }
-
-    return customAudios;
-  }
-  async createCustomAudio(unitId: number, customAudio: CustomAudioPayload) {
-    const tempFilePath = buildCustomAudioTempPath(unitId, customAudio.mimeType);
-
-    await promisify(writeFile)(tempFilePath, customAudio.buffer);
-
-    await emitWithAnswer<CovertConfig, unknown>(
-      ffmpegSocket,
-      FFMPEG_ACTIONS.CONVERT_MONO_16,
-      {
-        input: tempFilePath,
-        output: buildCustomAudioPath(unitId),
-        id: nanoid(),
-      },
-    );
-
-    await promisify(rm)(tempFilePath);
-  }
-  async saveCustomAudios(customAudios: CustomAudios, wordId: number) {
-    const word = await prisma.word.findUnique({
-      where: { id: wordId },
-      include: { sourceWord: true, targetWord: true },
-    });
-
-    if (customAudios.en && customAudios.en.isModified)
-      this.createCustomAudio(word.sourceWord.id, customAudios.en);
-
-    if (customAudios.ru && customAudios.ru.isModified)
-      this.createCustomAudio(word.targetWord.id, customAudios.ru);
-
-    const sourceAudioPath = buildCustomAudioPath(word.sourceWord.id);
-    const targetAudioPath = buildCustomAudioPath(word.targetWord.id);
-
-    if (!customAudios.en && existsSync(sourceAudioPath))
-      await promisify(rm)(sourceAudioPath);
-
-    if (!customAudios.ru && existsSync(targetAudioPath))
-      await promisify(rm)(targetAudioPath);
   }
 }
 

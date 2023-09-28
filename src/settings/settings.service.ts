@@ -3,15 +3,11 @@ import { prisma } from "../../prisma";
 import { Lang } from "../types";
 import { Settings } from "@prisma/client";
 import { pick } from "lodash";
+import { userSettings } from "./settings.selectors";
 
 class SettingsService {
   async loadSettings(userId: number) {
-    const { settings } = await prisma.user.findFirst({
-      where: { id: userId },
-      include: { settings: true },
-    });
-
-    return settings;
+    return userSettings(userId);
   }
   async changeSettings(payload: Settings, userId: number) {
     const user = await prisma.user.findFirst({ where: { id: userId } });

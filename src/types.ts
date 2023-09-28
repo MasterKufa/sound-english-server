@@ -1,3 +1,4 @@
+import { Word, WordUnit } from "@prisma/client";
 import { Socket } from "socket.io";
 
 export type SocketAuth = Socket & {
@@ -10,3 +11,17 @@ export enum Lang {
 }
 
 export type BufferedAudio = { buffer: Buffer; type: string };
+
+export type CustomAudioPayload = {
+  buffer: Buffer;
+  mimeType: string;
+  isModified?: boolean;
+};
+
+export type CustomAudios = Partial<Record<Lang, CustomAudioPayload>>;
+
+export type WordComplex = Word & {
+  customAudios: CustomAudios;
+  sourceWord: WordUnit;
+  targetWord: WordUnit;
+};

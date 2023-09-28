@@ -1,25 +1,55 @@
-import { existsSync, readFileSync, rmSync, writeFileSync } from "fs";
-import { buildAudioUnitPath, buildAudioWordPath } from "./player.helpers";
-import { Settings, Word, WordUnit } from "@prisma/client";
-import { createHash } from "crypto";
-import { Lang } from "../types";
-import { ConcatConfig, FFMPEG_ACTIONS } from "./player.types";
+import {
+  existsSync,
+  readFileSync,
+  rm,
+  rmSync,
+  writeFile,
+  writeFileSync,
+} from "fs";
+import {
+  buildAudioUnitPath,
+  buildAudioWordPath,
+  buildCustomAudioPath,
+  buildCustomAudioTempPath,
+} from "./player.helpers";
+import { Settings, WordUnit } from "@prisma/client";
+import { CustomAudioPayload, CustomAudios, Lang, WordComplex } from "../types";
+import { ConcatConfig, CovertConfig, FFMPEG_ACTIONS } from "./player.types";
 import { prisma } from "../../prisma";
 import { emitWithAnswer } from "@master_kufa/server-tools";
 import { ffmpegSocket } from "../client-sockets";
-import { buildCustomAudioPath } from "../vocabulary/vocabulary.helpers";
+import { settingsSelectors } from "../settings";
+import { promisify } from "util";
+import { nanoid } from "nanoid";
 
 class PlayerService {
-  async buildAudioPaths(
-    userId: number,
-    word: Word & {
-      sourceWord: WordUnit;
-      targetWord: WordUnit;
-    },
-    settings: Settings,
-  ) {
-    let sourcePath = buildAudioUnitPath(word.sourceWordUnitId);
-    let targetPath = buildAudioUnitPath(word.targetWordUnitId);
+  async generateAudio(word: WordComplex, userId: number) {
+    const settings = await settingsSelectors.userSettings(userId);
+
+    const [inputSource1, inputSource2] = await this.buildAudioPaths(
+      userId,
+      word,
+      settings,
+    );
+
+    await emitWithAnswer<ConcatConfig, unknown>(
+      ffmpegSocket,
+      FFMPEG_ACTIONS.CONCAT_WITH_PAUSE,
+      {
+        inputSource1,
+        inputSource1Times: settings.repeatSourceCount,
+        inputSource2,
+        inputSource2Times: settings.repeatTargetCount,
+        pauseMs: settings.delayPlayerSourceToTarget,
+        outputPath: buildAudioWordPath(word.id),
+        repeatSourceDelay: settings.repeatSourceDelay,
+        repeatTargetDelay: settings.repeatTargetDelay,
+      },
+    );
+  }
+  async buildAudioPaths(userId: number, word: WordComplex, settings: Settings) {
+    let sourcePath = buildAudioUnitPath(word.sourceWord.id);
+    let targetPath = buildAudioUnitPath(word.targetWord.id);
 
     const sourceCustomPath = buildCustomAudioPath(word.sourceWord.id);
     const targetCustomPath = buildCustomAudioPath(word.targetWord.id);
@@ -38,56 +68,8 @@ class PlayerService {
 
     return [sourcePath, targetPath];
   }
-  async loadAudio(id: number, userId: number) {
-    const word = await prisma.word.findUnique({
-      where: { id },
-      include: { sourceWord: true, targetWord: true },
-    });
-
-    const { settings } = await prisma.user.findUnique({
-      where: { id: userId },
-      include: { settings: true },
-    });
-
-    const wordAudioPath = buildAudioWordPath(id);
-
-    const generatedSoundHash = createHash("sha256")
-      .update(JSON.stringify({ ...settings, ...word }))
-      .digest("hex");
-
-    if (
-      generatedSoundHash === word.generatedSoundHash &&
-      existsSync(wordAudioPath)
-    ) {
-      return await readFileSync(wordAudioPath);
-    }
-    const [inputSource1, inputSource2] = await this.buildAudioPaths(
-      userId,
-      word,
-      settings,
-    );
-
-    await emitWithAnswer<ConcatConfig, unknown>(
-      ffmpegSocket,
-      FFMPEG_ACTIONS.CONCAT_WITH_PAUSE,
-      {
-        inputSource1,
-        inputSource1Times: settings.repeatSourceCount,
-        inputSource2,
-        inputSource2Times: settings.repeatTargetCount,
-        pauseMs: settings.delayPlayerSourceToTarget,
-        outputPath: wordAudioPath,
-        repeatSourceDelay: settings.repeatSourceDelay,
-        repeatTargetDelay: settings.repeatTargetDelay,
-      },
-    );
-
-    await prisma.word.update({
-      where: { id },
-      data: { generatedSoundHash },
-    });
-
-    return readFileSync(wordAudioPath);
+  async loadAudio(id: number) {
+    return readFileSync(buildAudioWordPath(id));
   }
   deleteAudioUnit(id: number) {
     const filePath = buildAudioUnitPath(id);
@@ -101,10 +83,7 @@ class PlayerService {
 
     this.deleteAudioUnit(payload.id);
 
-    const { settings } = await prisma.user.findFirst({
-      where: { id: userId },
-      include: { settings: true },
-    });
+    const settings = await settingsSelectors.userSettings(userId);
 
     const response = await fetch(
       payload.lang === Lang.ru
@@ -112,9 +91,73 @@ class PlayerService {
         : `${process.env.TTS_EN_HOST}/api/tts?voice=${settings.sourceVoice}&text=${payload.text}`,
     );
 
-    const wavBuffer = await response.arrayBuffer();
+    const mp3Buffer = await response.arrayBuffer();
 
-    writeFileSync(buildAudioUnitPath(payload.id), Buffer.from(wavBuffer));
+    writeFileSync(buildAudioUnitPath(payload.id), Buffer.from(mp3Buffer));
+  }
+  async buildCustomAudios(id: number): Promise<CustomAudios> {
+    const word = await prisma.word.findUnique({
+      where: { id },
+      include: { sourceWord: true, targetWord: true },
+    });
+
+    const customAudios: CustomAudios = {};
+    const targetPath = buildCustomAudioPath(word.targetWord.id);
+    const sourcePath = buildCustomAudioPath(word.sourceWord.id);
+
+    if (existsSync(targetPath)) {
+      customAudios.ru = {
+        buffer: readFileSync(targetPath),
+        mimeType: "audio/mp3",
+      };
+    }
+
+    if (existsSync(sourcePath)) {
+      customAudios.en = {
+        buffer: readFileSync(sourcePath),
+        mimeType: "audio/mp3",
+      };
+    }
+
+    return customAudios;
+  }
+  async createCustomAudio(unitId: number, customAudio: CustomAudioPayload) {
+    const tempFilePath = buildCustomAudioTempPath(unitId, customAudio.mimeType);
+
+    await promisify(writeFile)(tempFilePath, customAudio.buffer);
+
+    await emitWithAnswer<CovertConfig, unknown>(
+      ffmpegSocket,
+      FFMPEG_ACTIONS.CONVERT_MP3,
+      {
+        input: tempFilePath,
+        output: buildCustomAudioPath(unitId),
+        id: nanoid(),
+      },
+    );
+
+    await promisify(rm)(tempFilePath);
+  }
+  async saveCustomAudios(customAudios: CustomAudios, wordId: number) {
+    const word = await prisma.word.findUnique({
+      where: { id: wordId },
+      include: { sourceWord: true, targetWord: true },
+    });
+
+    if (customAudios.en && customAudios.en.isModified)
+      this.createCustomAudio(word.sourceWord.id, customAudios.en);
+
+    if (customAudios.ru && customAudios.ru.isModified)
+      this.createCustomAudio(word.targetWord.id, customAudios.ru);
+
+    const sourceAudioPath = buildCustomAudioPath(word.sourceWord.id);
+    const targetAudioPath = buildCustomAudioPath(word.targetWord.id);
+
+    if (!customAudios.en && existsSync(sourceAudioPath))
+      await promisify(rm)(sourceAudioPath);
+
+    if (!customAudios.ru && existsSync(targetAudioPath))
+      await promisify(rm)(targetAudioPath);
   }
 }
 
