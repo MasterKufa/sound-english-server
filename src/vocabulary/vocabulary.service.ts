@@ -79,7 +79,7 @@ class VocabularyService {
       where: { id: { in: [word.sourceWord.id, word.targetWord.id] } },
     });
 
-    playerService.deleteAudioUnit(id);
+    await playerService.deleteAudioUnit(id);
 
     return word.id;
   }

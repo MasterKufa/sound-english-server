@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, rmSync, writeFileSync } from "fs";
+import { existsSync } from "fs";
 import {
   buildAudioUnitPath,
   buildAudioWordPath,
@@ -18,7 +18,7 @@ import { emitWithAnswer } from "@master_kufa/server-tools";
 import { ffmpegSocket } from "../client-sockets";
 import { settingsSelectors } from "../settings";
 import { nanoid } from "nanoid";
-import { rm, writeFile } from "fs/promises";
+import { readFile, rm, writeFile } from "fs/promises";
 
 class PlayerService {
   async generateAudio(word: WordComplex, userId: number) {
@@ -67,19 +67,19 @@ class PlayerService {
     return [sourcePath, targetPath];
   }
   async loadAudio(id: number) {
-    return readFileSync(buildAudioWordPath(id));
+    return readFile(buildAudioWordPath(id));
   }
-  deleteAudioUnit(id: number) {
+  async deleteAudioUnit(id: number) {
     const filePath = buildAudioUnitPath(id);
     const fileCustomPath = buildCustomAudioPath(id);
 
-    if (existsSync(filePath)) rmSync(filePath);
-    if (existsSync(fileCustomPath)) rmSync(fileCustomPath);
+    if (existsSync(filePath)) await rm(filePath);
+    if (existsSync(fileCustomPath)) await rm(fileCustomPath);
   }
   async generateUnitsAudio(payload: WordUnit, userId: number) {
     if (!payload.text) return;
 
-    this.deleteAudioUnit(payload.id);
+    await this.deleteAudioUnit(payload.id);
 
     const settings = await settingsSelectors.userSettings(userId);
 
@@ -91,7 +91,7 @@ class PlayerService {
 
     const mp3Buffer = await response.arrayBuffer();
 
-    writeFileSync(buildAudioUnitPath(payload.id), Buffer.from(mp3Buffer));
+    await writeFile(buildAudioUnitPath(payload.id), Buffer.from(mp3Buffer));
   }
   async buildCustomAudios(id: number): Promise<CustomAudios> {
     const word = await prisma.word.findUnique({
@@ -105,14 +105,14 @@ class PlayerService {
 
     if (existsSync(targetPath)) {
       customAudios.ru = {
-        buffer: readFileSync(targetPath),
+        buffer: await readFile(targetPath),
         mimeType: "audio/mp3",
       };
     }
 
     if (existsSync(sourcePath)) {
       customAudios.en = {
-        buffer: readFileSync(sourcePath),
+        buffer: await readFile(sourcePath),
         mimeType: "audio/mp3",
       };
     }
