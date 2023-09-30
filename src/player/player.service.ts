@@ -19,8 +19,43 @@ import { ffmpegSocket } from "../client-sockets";
 import { settingsSelectors } from "../settings";
 import { nanoid } from "nanoid";
 import { readFile, rm, writeFile } from "fs/promises";
+import { createHash } from "crypto";
+import { pick } from "lodash";
+import { wordComplexSelector } from "../selectors";
 
 class PlayerService {
+  async invalidateAudio(word: WordComplex, userId: number) {
+    const settings = await settingsSelectors.userSettings(userId);
+
+    const generatedSoundHash = createHash("sha256")
+      .update(
+        JSON.stringify({
+          ...pick(
+            settings,
+            "isCustomAudioPreferable",
+            "delayPlayerSourceToTarget",
+            "delayPlayerWordToWord",
+            "sourceVoice",
+            "targetVoice",
+            "repeatSourceCount",
+            "repeatTargetCount",
+            "repeatSourceDelay",
+            "repeatTargetDelay",
+          ),
+          ...pick(word.sourceWord, "lang", "text"),
+          ...pick(word.targetWord, "lang", "text"),
+        }),
+      )
+      .digest("hex");
+
+    if (generatedSoundHash !== word.generatedSoundHash) {
+      await playerService.generateAudio(word as WordComplex, userId);
+      await prisma.word.update({
+        where: { id: word.id },
+        data: { generatedSoundHash },
+      });
+    }
+  }
   async generateAudio(word: WordComplex, userId: number) {
     const settings = await settingsSelectors.userSettings(userId);
 
@@ -66,7 +101,14 @@ class PlayerService {
 
     return [sourcePath, targetPath];
   }
-  async loadAudio(id: number) {
+  async loadAudio(id: number, userId: number) {
+    const word = await prisma.word.findUnique({
+      where: { id },
+      select: wordComplexSelector,
+    });
+    // to check whether settings or smth changed without word saving
+    await this.invalidateAudio(word, userId);
+
     return readFile(buildAudioWordPath(id));
   }
   async deleteAudioUnit(id: number) {

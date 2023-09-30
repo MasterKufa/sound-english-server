@@ -3,18 +3,10 @@ import { prisma } from "../../prisma";
 import { playerService } from "../player";
 import { translate } from "@vitalets/google-translate-api";
 import { pick } from "lodash";
-import { generateSoundHash } from "./vocabulary.helpers";
-import { settingsSelectors } from "../settings";
-import { WordComplex } from "../types";
+import { CustomAudios, WordComplex } from "../types";
+import { wordComplexSelector } from "../selectors";
 
 class VocabularyService {
-  private wordSelector = {
-    createdAt: true,
-    sourceWord: { select: { id: true, lang: true, text: true } },
-    targetWord: { select: { id: true, lang: true, text: true } },
-    id: true,
-    generatedSoundHash: true,
-  };
   async translateWord(payload: WordUnitReqBody) {
     const translation = await translate(payload.text, {
       to: "ru",
@@ -24,17 +16,12 @@ class VocabularyService {
   }
 
   async saveWord(payload: WordReqBody, userId: number) {
-    let word: Partial<WordComplex>;
-
-    const settings = await settingsSelectors.userSettings(userId);
-
-    const generatedSoundHash = generateSoundHash(settings, payload);
+    let word: WordComplex;
 
     if (payload.id) {
       word = await prisma.word.update({
         where: { id: payload.id },
         data: {
-          generatedSoundHash,
           sourceWord: {
             update: pick(payload.sourceWord, ["text", "lang"]),
           },
@@ -42,12 +29,11 @@ class VocabularyService {
             update: pick(payload.targetWord, ["text", "lang"]),
           },
         },
-        select: this.wordSelector,
+        select: wordComplexSelector,
       });
     } else {
       word = await prisma.word.create({
         data: {
-          generatedSoundHash,
           User: {
             connect: {
               id: userId,
@@ -56,14 +42,12 @@ class VocabularyService {
           sourceWord: { create: pick(payload.sourceWord, ["text", "lang"]) },
           targetWord: { create: pick(payload.targetWord, ["text", "lang"]) },
         },
-        select: this.wordSelector,
+        select: wordComplexSelector,
       });
     }
 
-    if (generatedSoundHash !== payload.generatedSoundHash) {
-      await playerService.generateAudio(word as WordComplex, userId);
-    }
-
+    // to check whether letters or smth changed
+    await playerService.invalidateAudio(word, userId);
     await playerService.saveCustomAudios(payload.customAudios, word.id);
 
     return word;
@@ -90,13 +74,15 @@ class VocabularyService {
         userId,
       },
       orderBy: { createdAt: "desc" },
-      select: this.wordSelector,
+      select: wordComplexSelector,
     });
   }
-  async loadWord({ id }: IdPayload): Promise<Partial<WordComplex>> {
+  async loadWord({
+    id,
+  }: IdPayload): Promise<WordComplex & { customAudios: CustomAudios }> {
     const word = await prisma.word.findFirst({
       where: { id },
-      select: this.wordSelector,
+      select: wordComplexSelector,
     });
 
     const customAudios = await playerService.buildCustomAudios(id);
