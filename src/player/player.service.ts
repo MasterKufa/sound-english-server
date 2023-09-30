@@ -1,11 +1,4 @@
-import {
-  existsSync,
-  readFileSync,
-  rm,
-  rmSync,
-  writeFile,
-  writeFileSync,
-} from "fs";
+import { existsSync, readFileSync, rmSync, writeFileSync } from "fs";
 import {
   buildAudioUnitPath,
   buildAudioWordPath,
@@ -14,13 +7,18 @@ import {
 } from "./player.helpers";
 import { Settings, WordUnit } from "@prisma/client";
 import { CustomAudioPayload, CustomAudios, Lang, WordComplex } from "../types";
-import { ConcatConfig, CovertConfig, FFMPEG_ACTIONS } from "./player.types";
+import {
+  ConcatConfig,
+  CovertConfig,
+  FFMPEG_ACTIONS,
+  NormalizeVolumeConfig,
+} from "./player.types";
 import { prisma } from "../../prisma";
 import { emitWithAnswer } from "@master_kufa/server-tools";
 import { ffmpegSocket } from "../client-sockets";
 import { settingsSelectors } from "../settings";
-import { promisify } from "util";
 import { nanoid } from "nanoid";
+import { rm, writeFile } from "fs/promises";
 
 class PlayerService {
   async generateAudio(word: WordComplex, userId: number) {
@@ -123,20 +121,32 @@ class PlayerService {
   }
   async createCustomAudio(unitId: number, customAudio: CustomAudioPayload) {
     const tempFilePath = buildCustomAudioTempPath(unitId, customAudio.mimeType);
+    const filePath = buildCustomAudioPath(unitId);
 
-    await promisify(writeFile)(tempFilePath, customAudio.buffer);
+    if (existsSync(filePath)) await rm(filePath);
+
+    await writeFile(tempFilePath, customAudio.buffer);
 
     await emitWithAnswer<CovertConfig, unknown>(
       ffmpegSocket,
       FFMPEG_ACTIONS.CONVERT_MP3,
       {
         input: tempFilePath,
-        output: buildCustomAudioPath(unitId),
+        output: filePath,
         id: nanoid(),
       },
     );
 
-    await promisify(rm)(tempFilePath);
+    await emitWithAnswer<NormalizeVolumeConfig, unknown>(
+      ffmpegSocket,
+      FFMPEG_ACTIONS.NORMALIZE_VOLUME,
+      {
+        input: filePath,
+        id: nanoid(),
+      },
+    );
+
+    await rm(tempFilePath);
   }
   async saveCustomAudios(customAudios: CustomAudios, wordId: number) {
     const word = await prisma.word.findUnique({
@@ -154,10 +164,10 @@ class PlayerService {
     const targetAudioPath = buildCustomAudioPath(word.targetWord.id);
 
     if (!customAudios.en && existsSync(sourceAudioPath))
-      await promisify(rm)(sourceAudioPath);
+      await rm(sourceAudioPath);
 
     if (!customAudios.ru && existsSync(targetAudioPath))
-      await promisify(rm)(targetAudioPath);
+      await rm(targetAudioPath);
   }
 }
 

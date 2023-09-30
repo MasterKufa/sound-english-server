@@ -64,7 +64,7 @@ class VocabularyService {
       await playerService.generateAudio(word as WordComplex, userId);
     }
 
-    playerService.saveCustomAudios(payload.customAudios, word.id);
+    await playerService.saveCustomAudios(payload.customAudios, word.id);
 
     return word;
   }
