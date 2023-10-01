@@ -4,7 +4,6 @@ export type WordReqBody = {
   sourceWord: WordUnitReqBody;
   targetWord: WordUnitReqBody;
   customAudios: CustomAudios;
-  generatedSoundHash: string;
   id?: number;
 };
 
@@ -26,4 +25,18 @@ export type ConcatAudiosPayload = {
   inputSource2: string;
   pauseMs: number;
   outputPath: string;
+};
+
+export type WordDefinition = {
+  [Lang.en]: string;
+  [Lang.ru]: string;
+};
+
+export type FileUploadPayload = {
+  file: Buffer;
+  name: string;
+};
+
+export type BulkWordUploadPayload = {
+  words: Array<WordDefinition>;
 };
