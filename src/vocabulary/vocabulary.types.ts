@@ -40,3 +40,13 @@ export type FileUploadPayload = {
 export type BulkWordUploadPayload = {
   words: Array<WordDefinition>;
 };
+
+export enum BulkUploadError {
+  langCheck = "langCheck",
+  duplicate = "duplicate",
+}
+
+export type BulkUploadFailedRecord = {
+  word: WordDefinition;
+  error: BulkUploadError;
+};

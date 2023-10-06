@@ -31,6 +31,7 @@ export const vocabularyApiHandlers = {
     fileUploadService.bulkUploadWords(
       payload,
       socket.handshake.auth.decoded.id,
+      socket,
     ),
 };
 

@@ -3,8 +3,9 @@ import { prisma } from "../../prisma";
 import { playerService } from "../player";
 import { translate } from "@vitalets/google-translate-api";
 import { pick } from "lodash";
-import { CustomAudios, WordComplex } from "../types";
+import { CustomAudios, Lang, WordComplex } from "../types";
 import { wordComplexSelector } from "../selectors";
+import { languageValidator } from "./language-validator";
 
 class VocabularyService {
   async translateWord(payload: WordUnitReqBody) {
@@ -16,8 +17,14 @@ class VocabularyService {
   }
 
   async saveWord(payload: WordReqBody, userId: number) {
-    let word: WordComplex;
+    if (
+      !languageValidator.validate(payload.sourceWord.text, Lang.en) ||
+      !languageValidator.validate(payload.targetWord.text, Lang.ru)
+    ) {
+      throw new Error("Word spelling does not match language");
+    }
 
+    let word: WordComplex;
     if (payload.id) {
       word = await prisma.word.update({
         where: { id: payload.id },
@@ -45,7 +52,6 @@ class VocabularyService {
         select: wordComplexSelector,
       });
     }
-
     // to check whether letters or smth changed
     await playerService.invalidateAudio(word, userId);
     await playerService.saveCustomAudios(payload.customAudios, word.id);
