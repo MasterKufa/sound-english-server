@@ -11,6 +11,10 @@ export type IdPayload = {
   id: number;
 };
 
+export type IdsPayload = {
+  ids: Array<number>;
+};
+
 export type WordUnitReqBody = {
   lang: Lang;
   text: string;

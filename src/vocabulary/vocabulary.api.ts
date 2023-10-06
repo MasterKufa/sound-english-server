@@ -6,6 +6,7 @@ import {
   IdPayload,
   FileUploadPayload,
   BulkWordUploadPayload,
+  IdsPayload,
 } from "./vocabulary.types";
 import { Api, Request } from "@master_kufa/server-tools";
 import { SocketAuth } from "../types";
@@ -18,6 +19,8 @@ export const vocabularyApiHandlers = {
     vocabularyService.translateWord(payload),
   [ACTIONS.DELETE_WORD]: (payload: Request<IdPayload>) =>
     vocabularyService.deleteWord(payload),
+  [ACTIONS.DELETE_WORDS_BULK]: (payload: Request<IdsPayload>) =>
+    vocabularyService.deleteWordsBulk(payload),
   [ACTIONS.LOAD_WORDS]: (_, socket: SocketAuth) =>
     vocabularyService.loadWords(socket.handshake.auth.decoded.id),
   [ACTIONS.LOAD_WORD]: (payload: Request<IdPayload>) =>

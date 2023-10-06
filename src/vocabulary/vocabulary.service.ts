@@ -1,4 +1,9 @@
-import { IdPayload, WordReqBody, WordUnitReqBody } from "./vocabulary.types";
+import {
+  IdPayload,
+  IdsPayload,
+  WordReqBody,
+  WordUnitReqBody,
+} from "./vocabulary.types";
 import { prisma } from "../../prisma";
 import { playerService } from "../player";
 import { translate } from "@vitalets/google-translate-api";
@@ -72,6 +77,14 @@ class VocabularyService {
     await playerService.deleteAudioUnit(id);
 
     return word.id;
+  }
+
+  async deleteWordsBulk({ ids }: IdsPayload) {
+    for await (const id of ids) {
+      await this.deleteWord({ id });
+    }
+
+    return ids;
   }
 
   async loadWords(userId: number) {
