@@ -12,13 +12,27 @@ import { Lang, WordComplex } from "../types";
 import { vocabularyService } from "./vocabulary.service";
 import { languageValidator } from "./language-validator";
 import { Socket } from "socket.io";
+import * as xlsx from "xlsx";
 import { ACTIONS } from "../actions";
 
 class FileUploadService {
+  private convertToCSV(name: string, file: Buffer): Buffer {
+    if (name.endsWith("csv")) return file;
+    if (name.endsWith("xlsx") || name.endsWith("xls")) {
+      const workBook = xlsx.read(file, { type: "buffer" });
+
+      return xlsx.write(workBook, { type: "buffer", bookType: "csv" });
+    }
+
+    throw new Error("Wrong file extension");
+  }
   async processFile({ name, file }: FileUploadPayload) {
     const records: Array<WordDefinition> = [];
     const failedRecords: Array<BulkUploadFailedRecord> = [];
-    const parser = Readable.from(file).pipe(parse({ columns: true }));
+    const buffer = this.convertToCSV(name, file);
+    const parser = Readable.from(buffer).pipe(
+      parse({ columns: true, bom: true }),
+    );
 
     for await (const record of parser) {
       const word = await prisma.word.findFirst({
