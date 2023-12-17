@@ -7,7 +7,7 @@ import {
 import { prisma } from "../../prisma";
 import { playerService } from "../player";
 import { translate } from "@vitalets/google-translate-api";
-import { omit, pick } from "lodash";
+import { pick } from "lodash";
 import { CustomAudios, WordComplexSanitized } from "../types";
 import { wordComplexSelector } from "../selectors";
 import { languageValidator } from "./language-validator";
@@ -29,6 +29,21 @@ class VocabularyService {
     ) {
       throw new Error("Word spelling does not match language");
     }
+
+    const duplicate = await prisma.word.findFirst({
+      where: {
+        units: {
+          every: {
+            AND: {
+              lang: { in: payload.units.map(({ lang }) => lang) },
+              text: { in: payload.units.map(({ text }) => text) },
+            },
+          },
+        },
+      },
+    });
+
+    if (duplicate) throw new Error("Word with such spelling already exists");
 
     let word: WordComplexSanitized;
     if (payload.id) {
