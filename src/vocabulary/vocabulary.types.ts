@@ -1,8 +1,7 @@
 import { CustomAudios, Lang } from "../types";
 
 export type WordReqBody = {
-  sourceWord: WordUnitReqBody;
-  targetWord: WordUnitReqBody;
+  units: Array<WordUnitReqBody>;
   customAudios: CustomAudios;
   id?: number;
 };
@@ -18,6 +17,7 @@ export type IdsPayload = {
 export type WordUnitReqBody = {
   lang: Lang;
   text: string;
+  id?: number;
 };
 
 export type WordTranslateResponse = {
@@ -31,10 +31,7 @@ export type ConcatAudiosPayload = {
   outputPath: string;
 };
 
-export type WordDefinition = {
-  [Lang.en]: string;
-  [Lang.ru]: string;
-};
+export type WordDefinition = Partial<Record<Lang, string>>;
 
 export type FileUploadPayload = {
   file: Buffer;

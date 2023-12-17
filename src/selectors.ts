@@ -1,7 +1,9 @@
-export const wordComplexSelector = {
-  createdAt: true,
-  sourceWord: { select: { id: true, lang: true, text: true } },
-  targetWord: { select: { id: true, lang: true, text: true } },
-  id: true,
-  generatedSoundHash: true,
-};
+import { WordComplexSanitized } from "./types";
+
+export const wordComplexSelector: Record<keyof WordComplexSanitized, boolean> =
+  {
+    createdAt: true,
+    units: true,
+    id: true,
+    generatedSoundHash: true,
+  };

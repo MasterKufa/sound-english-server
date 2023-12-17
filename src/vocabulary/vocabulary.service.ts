@@ -7,8 +7,8 @@ import {
 import { prisma } from "../../prisma";
 import { playerService } from "../player";
 import { translate } from "@vitalets/google-translate-api";
-import { pick } from "lodash";
-import { CustomAudios, Lang, WordComplex } from "../types";
+import { omit, pick } from "lodash";
+import { CustomAudios, WordComplexSanitized } from "../types";
 import { wordComplexSelector } from "../selectors";
 import { languageValidator } from "./language-validator";
 
@@ -23,41 +23,41 @@ class VocabularyService {
 
   async saveWord(payload: WordReqBody, userId: number) {
     if (
-      !languageValidator.validate(payload.sourceWord.text, Lang.en) ||
-      !languageValidator.validate(payload.targetWord.text, Lang.ru)
+      payload.units.some(
+        (unit) => !languageValidator.validate(unit.text, unit.lang),
+      )
     ) {
       throw new Error("Word spelling does not match language");
     }
 
-    let word: WordComplex;
+    let word: WordComplexSanitized;
     if (payload.id) {
-      word = await prisma.word.update({
+      await Promise.all(
+        payload.units.map((unit) =>
+          prisma.wordUnit.upsert({
+            create: { lang: unit.lang, text: unit.text, wordId: payload.id },
+            update: unit,
+            where: { id: unit.id },
+          }),
+        ),
+      );
+
+      word = await prisma.word.findFirst({
         where: { id: payload.id },
-        data: {
-          sourceWord: {
-            update: pick(payload.sourceWord, ["text", "lang"]),
-          },
-          targetWord: {
-            update: pick(payload.targetWord, ["text", "lang"]),
-          },
-        },
         select: wordComplexSelector,
       });
     } else {
       word = await prisma.word.create({
         data: {
-          User: {
-            connect: {
-              id: userId,
-            },
+          userId,
+          units: {
+            createMany: { data: payload.units },
           },
-          sourceWord: { create: pick(payload.sourceWord, ["text", "lang"]) },
-          targetWord: { create: pick(payload.targetWord, ["text", "lang"]) },
         },
         select: wordComplexSelector,
       });
     }
-    // to check whether letters or smth changed
+    // to check whether letters or something changed
     await playerService.invalidateAudio(word, userId);
     await playerService.saveCustomAudios(payload.customAudios, word.id);
 
@@ -67,14 +67,16 @@ class VocabularyService {
   async deleteWord({ id }: IdPayload) {
     const word = await prisma.word.delete({
       where: { id },
-      include: { sourceWord: true, targetWord: true },
+      include: { units: true },
     });
 
     await prisma.wordUnit.deleteMany({
-      where: { id: { in: [word.sourceWord.id, word.targetWord.id] } },
+      where: { id: { in: word.units.map(({ id }) => id) } },
     });
 
-    await playerService.deleteAudioUnit(id);
+    await Promise.all(
+      word.units.map((unit) => playerService.deleteAudioUnit(unit.id)),
+    );
 
     return word.id;
   }
@@ -98,7 +100,9 @@ class VocabularyService {
   }
   async loadWord({
     id,
-  }: IdPayload): Promise<WordComplex & { customAudios: CustomAudios }> {
+  }: IdPayload): Promise<
+    WordComplexSanitized & { customAudios: CustomAudios }
+  > {
     const word = await prisma.word.findFirst({
       where: { id },
       select: wordComplexSelector,

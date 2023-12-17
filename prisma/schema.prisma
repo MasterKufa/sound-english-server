@@ -9,34 +9,27 @@ datasource db {
 
 // generatedAudioHash change after add important prop
 model WordUnit {
-  id   Int    @id @default(autoincrement())
-  lang String
-  text String
-
-  sourceWords Word[] @relation(name: "sourceWords")
-  targetWords Word[] @relation(name: "targetWords")
+  id     Int    @id @default(autoincrement())
+  lang   String
+  text   String
+  word   Word   @relation(fields: [wordId], references: [id], onDelete: Cascade)
+  wordId Int
 }
 
 // generatedAudioHash change after add important prop
 model Word {
-  id                 Int      @id @default(autoincrement())
+  id                 Int        @id @default(autoincrement())
   userId             Int
-  createdAt          DateTime @default(now())
-  sourceWord         WordUnit @relation(fields: [sourceWordUnitId], references: [id], name: "sourceWords")
-  targetWord         WordUnit @relation(fields: [targetWordUnitId], references: [id], name: "targetWords")
-  sourceWordUnitId   Int
-  targetWordUnitId   Int
-  generatedSoundHash String   @default("")
-  User               User     @relation(fields: [userId], references: [id])
+  createdAt          DateTime   @default(now())
+  units              WordUnit[]
+  generatedSoundHash String     @default("")
+  User               User       @relation(fields: [userId], references: [id])
 }
 
 model User {
-  id Int @unique
-
-  words    Word[]
-  settings Settings @relation(fields: [settingsId], references: [id])
-
-  wordIds    Int[]
+  id         Int      @id
+  words      Word[]
+  settings   Settings @relation(fields: [settingsId], references: [id])
   settingsId Int
 }
 
@@ -56,5 +49,7 @@ model Settings {
   repeatSourceDelay         Int     @default(0)
   repeatTargetDelay         Int     @default(0)
   queueStrategy             String  @default("sequence")
+  sourceLang                String  @default("en")
+  targetLang                String  @default("ru")
   User                      User[]
 }

@@ -14,5 +14,5 @@ export const buildCustomAudioTempPath = (id: number, type: string) =>
     `${id}.${extension(type)}`,
   );
 
-export const buildCustomAudioPath = (id: number) =>
+export const buildCustomAudioUnitPath = (id: number) =>
   resolve(createNotExistedPath("audios/units"), `${id}.custom.mp3`);

@@ -35,11 +35,10 @@ class SettingsService {
   }
   async loadVoices(payload: LoadVoicesBody) {
     const res = await fetch(
-      `${
-        payload.lang === Lang.ru
-          ? process.env.TTS_RU_HOST
-          : process.env.TTS_EN_HOST
-      }/api/voices`,
+      {
+        [Lang.ru]: `${process.env.TTS_RU_HOST}/api/voices`,
+        [Lang.en]: `${process.env.TTS_EN_HOST}/api/voices`,
+      }[payload.lang],
     );
 
     const voices: Array<Voice> = await res.json();

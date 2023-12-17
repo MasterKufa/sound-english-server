@@ -2,11 +2,16 @@ import { existsSync } from "fs";
 import {
   buildAudioUnitPath,
   buildAudioWordPath,
-  buildCustomAudioPath,
+  buildCustomAudioUnitPath,
   buildCustomAudioTempPath,
 } from "./player.helpers";
 import { Settings, WordUnit } from "@prisma/client";
-import { CustomAudioPayload, CustomAudios, Lang, WordComplex } from "../types";
+import {
+  CustomAudioPayload,
+  CustomAudios,
+  Lang,
+  WordComplexSanitized,
+} from "../types";
 import {
   ConcatConfig,
   CovertConfig,
@@ -20,50 +25,50 @@ import { settingsSelectors } from "../settings";
 import { nanoid } from "nanoid";
 import { readFile, rm, writeFile } from "fs/promises";
 import { createHash } from "crypto";
-import { pick } from "lodash";
+import { fromPairs, pick } from "lodash";
 import { wordComplexSelector } from "../selectors";
 
 class PlayerService {
-  async invalidateAudio(word: WordComplex, userId: number) {
+  async invalidateAudio(word: WordComplexSanitized, userId: number) {
     const settings = await settingsSelectors.userSettings(userId);
 
     const generatedSoundHash = createHash("sha256")
       .update(
         JSON.stringify({
-          ...pick(
+          ...pick<Settings, keyof Settings>(
             settings,
             "isCustomAudioPreferable",
             "delayPlayerSourceToTarget",
             "delayPlayerWordToWord",
             "sourceVoice",
             "targetVoice",
+            "sourceLang",
+            "targetLang",
             "repeatSourceCount",
             "repeatTargetCount",
             "repeatSourceDelay",
             "repeatTargetDelay",
           ),
-          ...pick(word.sourceWord, "lang", "text"),
-          ...pick(word.targetWord, "lang", "text"),
+          values: word.units.flatMap((unit) => [unit.lang, unit.text]),
         }),
       )
       .digest("hex");
 
     if (generatedSoundHash !== word.generatedSoundHash) {
-      await playerService.generateAudio(word as WordComplex, userId);
+      await playerService.generateAudio(word, userId);
       await prisma.word.update({
         where: { id: word.id },
         data: { generatedSoundHash },
       });
     }
   }
-  async generateAudio(word: WordComplex, userId: number) {
+  async generateAudio(word: WordComplexSanitized, userId: number) {
     const settings = await settingsSelectors.userSettings(userId);
 
-    const [inputSource1, inputSource2] = await this.buildAudioPaths(
-      userId,
-      word,
-      settings,
-    );
+    const [inputSource1, inputSource2] =
+      await this.buildAudioPathsForWordGeneration(userId, word, settings);
+
+    if (!inputSource1 || !inputSource2) return;
 
     await emitWithAnswer<ConcatConfig, unknown>(
       ffmpegSocket,
@@ -80,40 +85,50 @@ class PlayerService {
       },
     );
   }
-  async buildAudioPaths(userId: number, word: WordComplex, settings: Settings) {
-    let sourcePath = buildAudioUnitPath(word.sourceWord.id);
-    let targetPath = buildAudioUnitPath(word.targetWord.id);
+  async buildAudioPathsForWordGeneration(
+    userId: number,
+    word: WordComplexSanitized,
+    settings: Settings,
+  ) {
+    const currentLanguagePairUnits = word.units.filter(
+      (unit) =>
+        unit.lang === settings.sourceLang || unit.lang === settings.targetLang,
+    );
 
-    const sourceCustomPath = buildCustomAudioPath(word.sourceWord.id);
-    const targetCustomPath = buildCustomAudioPath(word.targetWord.id);
+    const paths = currentLanguagePairUnits.map(({ id }) =>
+      buildAudioUnitPath(id),
+    );
+    const customPaths = currentLanguagePairUnits.map(({ id }) =>
+      buildCustomAudioUnitPath(id),
+    );
 
-    if (settings.isCustomAudioPreferable && existsSync(sourceCustomPath)) {
-      sourcePath = sourceCustomPath;
-    } else {
-      await this.generateUnitsAudio(word.sourceWord, userId);
+    for (let i = 0; i < customPaths.length; i++) {
+      if (settings.isCustomAudioPreferable && existsSync(customPaths[i])) {
+        paths[i] = customPaths[i];
+      } else {
+        await this.generateUnitsAudio(currentLanguagePairUnits[i], userId);
+      }
     }
 
-    if (settings.isCustomAudioPreferable && existsSync(targetCustomPath)) {
-      targetPath = targetCustomPath;
-    } else {
-      await this.generateUnitsAudio(word.targetWord, userId);
-    }
-
-    return [sourcePath, targetPath];
+    return paths;
   }
   async loadAudio(id: number, userId: number) {
     const word = await prisma.word.findUnique({
       where: { id },
       select: wordComplexSelector,
     });
-    // to check whether settings or smth changed without word saving
+    // to check whether settings or something changed without word saving
     await this.invalidateAudio(word, userId);
 
-    return readFile(buildAudioWordPath(id));
+    const path = buildAudioWordPath(id);
+
+    if (!existsSync(path)) return Buffer.from("", "binary");
+
+    return readFile(path);
   }
   async deleteAudioUnit(id: number) {
     const filePath = buildAudioUnitPath(id);
-    const fileCustomPath = buildCustomAudioPath(id);
+    const fileCustomPath = buildCustomAudioUnitPath(id);
 
     if (existsSync(filePath)) await rm(filePath);
     if (existsSync(fileCustomPath)) await rm(fileCustomPath);
@@ -126,9 +141,10 @@ class PlayerService {
     const settings = await settingsSelectors.userSettings(userId);
 
     const response = await fetch(
-      payload.lang === Lang.ru
-        ? `${process.env.TTS_RU_HOST}/api/tts?voice=${settings.targetVoice}&text=${payload.text}`
-        : `${process.env.TTS_EN_HOST}/api/tts?voice=${settings.sourceVoice}&text=${payload.text}`,
+      {
+        [Lang.en]: `${process.env.TTS_EN_HOST}/api/tts?voice=${settings.sourceVoice}&text=${payload.text}`,
+        [Lang.ru]: `${process.env.TTS_RU_HOST}/api/tts?voice=${settings.targetVoice}&text=${payload.text}`,
+      }[payload.lang],
     );
 
     const mp3Buffer = await response.arrayBuffer();
@@ -138,32 +154,29 @@ class PlayerService {
   async buildCustomAudios(id: number): Promise<CustomAudios> {
     const word = await prisma.word.findUnique({
       where: { id },
-      include: { sourceWord: true, targetWord: true },
+      include: { units: true },
     });
 
     const customAudios: CustomAudios = {};
-    const targetPath = buildCustomAudioPath(word.targetWord.id);
-    const sourcePath = buildCustomAudioPath(word.sourceWord.id);
 
-    if (existsSync(targetPath)) {
-      customAudios.ru = {
-        buffer: await readFile(targetPath),
-        mimeType: "audio/mp3",
-      };
-    }
+    const paths = word.units.map((unit) => buildCustomAudioUnitPath(unit.id));
 
-    if (existsSync(sourcePath)) {
-      customAudios.en = {
-        buffer: await readFile(sourcePath),
-        mimeType: "audio/mp3",
-      };
-    }
+    await Promise.all(
+      paths.map(async (path, inx) => {
+        if (existsSync(path)) {
+          customAudios[word.units[inx].lang] = {
+            buffer: await readFile(path),
+            mimeType: "audio/mp3",
+          };
+        }
+      }),
+    );
 
     return customAudios;
   }
   async createCustomAudio(unitId: number, customAudio: CustomAudioPayload) {
     const tempFilePath = buildCustomAudioTempPath(unitId, customAudio.mimeType);
-    const filePath = buildCustomAudioPath(unitId);
+    const filePath = buildCustomAudioUnitPath(unitId);
 
     if (existsSync(filePath)) await rm(filePath);
 
@@ -193,23 +206,15 @@ class PlayerService {
   async saveCustomAudios(customAudios: CustomAudios, wordId: number) {
     const word = await prisma.word.findUnique({
       where: { id: wordId },
-      include: { sourceWord: true, targetWord: true },
+      include: { units: true },
     });
 
-    if (customAudios.en && customAudios.en.isModified)
-      this.createCustomAudio(word.sourceWord.id, customAudios.en);
-
-    if (customAudios.ru && customAudios.ru.isModified)
-      this.createCustomAudio(word.targetWord.id, customAudios.ru);
-
-    const sourceAudioPath = buildCustomAudioPath(word.sourceWord.id);
-    const targetAudioPath = buildCustomAudioPath(word.targetWord.id);
-
-    if (!customAudios.en && existsSync(sourceAudioPath))
-      await rm(sourceAudioPath);
-
-    if (!customAudios.ru && existsSync(targetAudioPath))
-      await rm(targetAudioPath);
+    await Promise.all(
+      word.units.map(async (unit) => {
+        if (customAudios[unit.lang] && customAudios[unit.lang].isModified)
+          await this.createCustomAudio(unit.id, customAudios[unit.lang]);
+      }),
+    );
   }
 }
 

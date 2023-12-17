@@ -20,10 +20,8 @@ export type CustomAudioPayload = {
 
 export type CustomAudios = Partial<Record<Lang, CustomAudioPayload>>;
 
-export type WordComplex = Omit<
-  Word & {
-    sourceWord: WordUnit;
-    targetWord: WordUnit;
-  },
-  "userId" | "sourceWordUnitId" | "targetWordUnitId"
->;
+export type WordComplex = Word & {
+  units: Array<WordUnit>;
+};
+
+export type WordComplexSanitized = Omit<WordComplex, "userId">;

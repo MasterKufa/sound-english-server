@@ -8,12 +8,13 @@ import {
 } from "./vocabulary.types";
 import { Readable } from "stream";
 import { prisma } from "../../prisma";
-import { Lang, WordComplex } from "../types";
+import { Lang, WordComplexSanitized } from "../types";
 import { vocabularyService } from "./vocabulary.service";
 import { languageValidator } from "./language-validator";
 import { Socket } from "socket.io";
 import * as xlsx from "xlsx";
 import { ACTIONS } from "../actions";
+import { entries, values } from "lodash";
 
 class FileUploadService {
   private convertToCSV(name: string, file: Buffer): Buffer {
@@ -35,20 +36,43 @@ class FileUploadService {
     );
 
     for await (const record of parser) {
+      if (
+        values(Lang).some(
+          (lang) =>
+            record[lang] && !languageValidator.validate(record[lang], lang),
+        )
+      ) {
+        failedRecords.push({
+          word: record,
+          error: BulkUploadError.langCheck,
+        });
+
+        continue;
+      }
+
+      const recordUnits = entries(record).map(([lang, text]) => ({
+        lang,
+        text: text as string,
+      }));
+
       const word = await prisma.word.findFirst({
         where: {
-          sourceWord: { text: record[Lang.en] },
-          targetWord: { text: record[Lang.ru] },
+          units: {
+            every: {
+              AND: {
+                lang: { in: recordUnits.map(({ lang }) => lang) },
+                text: { in: recordUnits.map(({ text }) => text) },
+              },
+            },
+          },
         },
       });
 
       if (word) {
-        failedRecords.push({ word: record, error: BulkUploadError.duplicate });
-      } else if (
-        !languageValidator.validate(record[Lang.en], Lang.en) ||
-        !languageValidator.validate(record[Lang.ru], Lang.ru)
-      ) {
-        failedRecords.push({ word: record, error: BulkUploadError.langCheck });
+        failedRecords.push({
+          word: record,
+          error: BulkUploadError.duplicate,
+        });
       } else {
         records.push(record);
       }
@@ -61,13 +85,15 @@ class FileUploadService {
     userId: number,
     socket: Socket,
   ) {
-    const result: Array<WordComplex> = [];
+    const result: Array<WordComplexSanitized> = [];
 
     for await (const word of words) {
       const newWord = await vocabularyService.saveWord(
         {
-          sourceWord: { lang: Lang.en, text: word[Lang.en] },
-          targetWord: { lang: Lang.ru, text: word[Lang.ru] },
+          units: entries(word).map(([lang, text]) => ({
+            lang: lang as Lang,
+            text,
+          })),
           customAudios: {},
         },
         userId,
