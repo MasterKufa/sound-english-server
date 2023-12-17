@@ -211,6 +211,15 @@ class PlayerService {
 
     await Promise.all(
       word.units.map(async (unit) => {
+        const path = buildCustomAudioUnitPath(unit.id);
+
+        if (
+          customAudios[unit.lang] &&
+          customAudios[unit.lang].isDeleted &&
+          existsSync(path)
+        )
+          await rm(path);
+
         if (customAudios[unit.lang] && customAudios[unit.lang].isModified)
           await this.createCustomAudio(unit.id, customAudios[unit.lang]);
       }),

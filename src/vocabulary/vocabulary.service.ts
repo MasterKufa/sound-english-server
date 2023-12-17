@@ -37,7 +37,7 @@ class VocabularyService {
           prisma.wordUnit.upsert({
             create: { lang: unit.lang, text: unit.text, wordId: payload.id },
             update: unit,
-            where: { id: unit.id },
+            where: { id: unit.id || -1 },
           }),
         ),
       );
