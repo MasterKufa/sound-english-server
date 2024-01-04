@@ -1,4 +1,4 @@
-import { LoadVoicesBody, Voice } from "./settings.types";
+import { LoadVoicesBody } from "./settings.types";
 import { prisma } from "../../prisma";
 import { Lang } from "../types";
 import { Settings } from "@prisma/client";
@@ -33,19 +33,20 @@ class SettingsService {
 
     return settings;
   }
-  async loadVoices(payload: LoadVoicesBody) {
-    const res = await fetch(
-      {
-        [Lang.ru]: `${process.env.TTS_RU_HOST}/api/voices`,
-        [Lang.en]: `${process.env.TTS_EN_HOST}/api/voices`,
-      }[payload.lang],
-    );
 
-    const voices: Array<Voice> = await res.json();
-
-    return Object.entries(voices)
-      .filter(([_, voice]) => voice.language === payload.lang)
-      .map(([name, { gender }]) => ({ name, gender }));
+  loadVoices(payload: LoadVoicesBody) {
+    return {
+      [Lang.ru]: [
+        "aleksandr",
+        "anna",
+        "arina",
+        "artemiy",
+        "elena",
+        "irina",
+        "pavel",
+      ],
+      [Lang.en]: ["alan", "bdl", "clb", "slt"],
+    }[payload.lang];
   }
 }
 

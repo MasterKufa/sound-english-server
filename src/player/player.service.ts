@@ -140,11 +140,15 @@ class PlayerService {
 
     const settings = await settingsSelectors.userSettings(userId);
 
+    const voices = {
+      [settings.sourceLang]: settings.sourceVoice,
+      [settings.targetLang]: settings.targetVoice,
+    };
+
     const response = await fetch(
-      {
-        [Lang.en]: `${process.env.TTS_EN_HOST}/api/tts?voice=${settings.sourceVoice}&text=${payload.text}`,
-        [Lang.ru]: `${process.env.TTS_RU_HOST}/api/tts?voice=${settings.targetVoice}&text=${payload.text}`,
-      }[payload.lang],
+      `${process.env.TTS_HOST}/say?voice=${voices[payload.lang]}&text=${
+        payload.text
+      }&format=mp3`,
     );
 
     const mp3Buffer = await response.arrayBuffer();

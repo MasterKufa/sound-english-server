@@ -1,7 +1,6 @@
 declare namespace NodeJS {
   interface ProcessEnv {
-    TTS_EN_HOST: string;
-    TTS_RU_HOST: string;
+    TTS_HOST: string;
     FFMPEG_HOST: string;
     AUTH_HOST: string;
     SERVER_PORT: string;
