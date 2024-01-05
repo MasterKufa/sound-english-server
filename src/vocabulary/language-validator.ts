@@ -2,8 +2,8 @@ import { Lang } from "../types";
 
 class LanguageValidator {
   private languageRegexps: Record<Lang, RegExp> = {
-    [Lang.ru]: /[а-я, ]+/gi,
-    [Lang.en]: /[\w, ]+/gi,
+    [Lang.ru]: /^[а-я, ]+$/gi,
+    [Lang.en]: /^[\w, ]+$/gi,
   };
 
   validate(text: string, lang: Lang) {
