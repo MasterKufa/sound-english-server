@@ -20,6 +20,12 @@ export type WordUnitReqBody = {
   id?: number;
 };
 
+export type WordTranslateRequest = {
+  text: string;
+  sourceLang: Lang;
+  targetLang: Lang;
+};
+
 export type WordTranslateResponse = {
   text: string;
 };

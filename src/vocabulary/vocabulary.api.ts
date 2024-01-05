@@ -2,11 +2,11 @@ import { vocabularyService } from "./vocabulary.service";
 import { ACTIONS } from "../actions";
 import {
   WordReqBody,
-  WordUnitReqBody,
   IdPayload,
   FileUploadPayload,
   BulkWordUploadPayload,
   IdsPayload,
+  WordTranslateRequest,
 } from "./vocabulary.types";
 import { Api, Request } from "@master_kufa/server-tools";
 import { SocketAuth } from "../types";
@@ -15,7 +15,7 @@ import { fileUploadService } from "./file-upload.service";
 export const vocabularyApiHandlers = {
   [ACTIONS.SAVE_WORD]: (payload: Request<WordReqBody>, socket: SocketAuth) =>
     vocabularyService.saveWord(payload, socket.handshake.auth.decoded.id),
-  [ACTIONS.TRANSLATE_WORD]: (payload: Request<WordUnitReqBody>) =>
+  [ACTIONS.TRANSLATE_WORD]: (payload: Request<WordTranslateRequest>) =>
     vocabularyService.translateWord(payload),
   [ACTIONS.DELETE_WORD]: (payload: Request<IdPayload>) =>
     vocabularyService.deleteWord(payload),

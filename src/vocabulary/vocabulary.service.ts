@@ -2,23 +2,28 @@ import {
   IdPayload,
   IdsPayload,
   WordReqBody,
-  WordUnitReqBody,
+  WordTranslateRequest,
 } from "./vocabulary.types";
 import { prisma } from "../../prisma";
 import { playerService } from "../player";
-import { translate } from "@vitalets/google-translate-api";
 import { pick } from "lodash";
 import { CustomAudios, WordComplexSanitized } from "../types";
 import { wordComplexSelector } from "../selectors";
 import { languageValidator } from "./language-validator";
 
 class VocabularyService {
-  async translateWord(payload: WordUnitReqBody) {
-    const translation = await translate(payload.text, {
-      to: "ru",
+  async translateWord(payload: WordTranslateRequest) {
+    const res = await fetch(`${process.env.TRANSLATE_HOST}/translate`, {
+      method: "POST",
+      body: JSON.stringify({
+        q: payload.text,
+        source: payload.sourceLang,
+        target: payload.targetLang,
+      }),
+      headers: { "Content-Type": "application/json" },
     });
 
-    return pick(translation, "text");
+    return { text: (await res.json()).translatedText };
   }
 
   async saveWord(payload: WordReqBody, userId: number) {
