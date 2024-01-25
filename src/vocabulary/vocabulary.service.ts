@@ -81,6 +81,12 @@ class VocabularyService {
     await playerService.invalidateAudio(word, userId);
     await playerService.saveCustomAudios(payload.customAudios, word.id);
 
+    word = await prisma.word.update({
+      where: { id: word.id },
+      data: { updatedAt: new Date() },
+      select: wordComplexSelector,
+    });
+
     return word;
   }
 
