@@ -25,13 +25,25 @@ model Word {
   units              WordUnit[]
   generatedSoundHash String     @default("")
   User               User       @relation(fields: [userId], references: [id])
+  Playlists          Playlist[]
+}
+
+model Playlist {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  name      String
+  words     Word[]
+  User      User     @relation(fields: [userId], references: [id])
 }
 
 model User {
-  id         Int      @id
+  id         Int        @id
   words      Word[]
-  settings   Settings @relation(fields: [settingsId], references: [id])
+  settings   Settings   @relation(fields: [settingsId], references: [id])
   settingsId Int
+  Playlist   Playlist[]
 }
 
 // generatedAudioHash change after add important setting

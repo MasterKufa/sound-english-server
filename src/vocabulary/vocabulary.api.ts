@@ -2,14 +2,12 @@ import { vocabularyService } from "./vocabulary.service";
 import { ACTIONS } from "../actions";
 import {
   WordReqBody,
-  IdPayload,
   FileUploadPayload,
   BulkWordUploadPayload,
-  IdsPayload,
   WordTranslateRequest,
 } from "./vocabulary.types";
 import { Api, Request } from "@master_kufa/server-tools";
-import { SocketAuth } from "../types";
+import { IdPayload, IdsPayload, SocketAuth } from "../types";
 import { fileUploadService } from "./file-upload.service";
 
 export const vocabularyApiHandlers = {

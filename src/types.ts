@@ -26,3 +26,11 @@ export type WordComplex = Word & {
 };
 
 export type WordComplexSanitized = Omit<WordComplex, "userId">;
+
+export type IdPayload = {
+  id: number;
+};
+
+export type IdsPayload = {
+  ids: Array<number>;
+};

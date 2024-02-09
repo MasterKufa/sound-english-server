@@ -1,13 +1,12 @@
-import {
-  IdPayload,
-  IdsPayload,
-  WordReqBody,
-  WordTranslateRequest,
-} from "./vocabulary.types";
+import { WordReqBody, WordTranslateRequest } from "./vocabulary.types";
 import { prisma } from "../../prisma";
 import { playerService } from "../player";
-import { pick } from "lodash";
-import { CustomAudios, WordComplexSanitized } from "../types";
+import {
+  CustomAudios,
+  IdPayload,
+  IdsPayload,
+  WordComplexSanitized,
+} from "../types";
 import { wordComplexSelector } from "../selectors";
 import { languageValidator } from "./language-validator";
 

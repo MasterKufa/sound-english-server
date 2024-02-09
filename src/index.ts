@@ -5,6 +5,7 @@ import { userService } from "./user";
 import { playerApi, playerApiHandlers } from "./player";
 import { settingsApi, settingsApiHandlers } from "./settings";
 import { registerApi } from "./helpers";
+import { playlistsApi, playlistsApiHandlers } from "./playlists";
 
 const server = createServer({ withAuthorization: true });
 
@@ -18,4 +19,5 @@ server.on("connection", async (socket: Socket) => {
   registerApi(vocabularyApiHandlers, vocabularyApi, socket);
   registerApi(playerApiHandlers, playerApi, socket);
   registerApi(settingsApiHandlers, settingsApi, socket);
+  registerApi(playlistsApiHandlers, playlistsApi, socket);
 });
